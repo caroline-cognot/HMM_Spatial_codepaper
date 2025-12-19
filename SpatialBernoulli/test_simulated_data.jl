@@ -1,4 +1,4 @@
-include("/home/caroline/Gitlab_SWG_Caro/hmmspa/SpatialBernoulli/SpatialBernoulli.jl")
+include("../SpatialBernoulli/SpatialBernoulli.jl")
 
 
 
@@ -10,7 +10,6 @@ my_locations = vcat(([x y] for x in 0:0.2:1 for y in 0:0.2:1)...)
 nlocs = length(my_locations[:, 1])
 
 
-scatter(my_locations[:, 1], my_locations[:, 2])
 my_distance = [sqrt(sum(abs2, my_locations[i, :] - my_locations[j, :])) for i in axes(my_locations, 1), j in axes(my_locations, 1)]
 
 # randomly generate a SpatialBernoulli
@@ -24,7 +23,34 @@ heatmap(d.ΣU)
 # generate data
 n = 20
 y=rand(d,n)
-PlotSim(y[:, 1:9], my_locations)
+
+######## plot simulation ###############
+using CairoMakie
+yplot=y[:,2]
+begin
+fig = Figure()
+ax = Axis(fig[1, 1])
+
+scatter!(
+    ax,
+    my_locations[yplot .== 0, 1],
+    my_locations[yplot .== 0, 2];
+    color = :black,
+    label = "y = 0"
+)
+
+scatter!(
+    ax,
+    my_locations[yplot .== 1, 1],
+    my_locations[yplot .== 1, 2];
+    color = :white,
+    strokecolor = :black,
+    label = "y = 1"
+)
+
+axislegend(ax)
+fig
+end
 
 
 # fit a model using initial values

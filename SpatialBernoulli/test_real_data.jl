@@ -1,4 +1,4 @@
-include("/home/caroline/Gitlab_SWG_Caro/hmmspa/SpatialBernoulli/SpatialBernoulli.jl")
+include("../SpatialBernoulli/SpatialBernoulli.jl")
 station_50Q = CSV.read("data/transformedECAD_stations.csv",DataFrame)
 Yobs=Matrix(CSV.read("data/transformedECAD_Yobs.csv",header=false,DataFrame))
 my_distance =Matrix(CSV.read("data/transformedECAD_locsdistances.csv",header=false,DataFrame))
@@ -30,15 +30,12 @@ Threads.@threads for imonth in 1:12
     @time sol_fixednu = fit_mle(init_d, y, wp; order=1/2,maxiters = 10, m=100 * 2, return_sol=false)
 
     # Save to JLD2 file
-    save("/home/caroline/Gitlab_SWG_Caro/hmmspa/SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2", Dict("d" => sol_fixednu))
-
- 
-    
+    save("../SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2", Dict("d" => sol_fixednu))
 end
 
 vec_models = Vector{SpatialBernoulli}(undef, 12)
 for imonth in 1:12
-    vec_models[imonth] = load("SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
+    vec_models[imonth] = load("../SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
 end
 
 
@@ -91,7 +88,7 @@ pp=Plots.plot(p,p1,p2,layout= @layout [a;b c])
 savefig(pp, "/home/caroline/Gitlab_SWG_Caro/hmmspa/SpatialBernoulli/ROR_500sim_andparams.png")
 
 
-############## useless code??? ##########
+############## useless code??? ##########
 im=1
 Y = Ymonths[im]
 nt=length(Y[1,:])
