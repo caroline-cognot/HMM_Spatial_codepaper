@@ -1,0 +1,79 @@
+EUROPEAN CLIMATE ASSESSMENT & DATASET (ECA&D), file created on 02-12-2024
+THESE DATA CAN BE USED FREELY PROVIDED THAT THE FOLLOWING SOURCE IS ACKNOWLEDGED:
+
+Klein Tank, A.M.G. and Coauthors, 2002. Daily dataset of 20th-century surface
+air temperature and precipitation series for the European Climate Assessment.
+Int. J. of Climatol., 22, 1441-1453.
+Data and metadata available at http://www.ecad.eu
+
+FILE FORMAT (MISSING VALUE CODE IS -9999):
+
+ 01- 05 STAID  : Station identifier
+ 07- 46 STANAME: Station name
+ 48- 49 CN     : Country code (ISO3116 country codes)
+ 51- 59 LAT    : Latitude in degrees:minutes:seconds (+: North, -: South)
+ 61- 70 LON    : Longitude in degrees:minutes:seconds (+: East, -: West)
+ 72- 75 HGTH   : Station elevation in meters
+
+STAID,STANAME                                 ,CN,      LAT,       LON,HGHT
+
+   32,BOURGES                                 ,FR,+47:03:33,+002:21:35, 161
+   33,TOULOUSE-BLAGNAC                        ,FR,+43:37:16,+001:22:44, 151
+   34,BORDEAUX-MERIGNAC                       ,FR,+44:49:50,-000:41:29,  47
+   36,PERPIGNAN                               ,FR,+42:44:14,+002:52:22,  42
+   37,LYON - ST EXUPERY                       ,FR,+45:43:35,+005:04:40, 235
+  736,ABBEVILLE                               ,FR,+50:08:10,+001:50:02,  69
+  737,LILLE-LESQUIN                           ,FR,+50:34:12,+003:05:51,  47
+  738,CAEN-CARPIQUET                          ,FR,+49:10:48,-000:27:22,  67
+  739,REIMS-PRUNAY                            ,FR,+49:12:35,+004:09:19,  95
+  740,ALENCON                                 ,FR,+48:26:44,+000:06:37, 143
+  742,NANTES-BOUGUENAIS                       ,FR,+47:09:00,-001:36:32,  26
+  745,DIJON-LONGVIC                           ,FR,+47:16:04,+005:05:18, 219
+  749,POITIERS - BIARD                        ,FR,+46:35:38,+000:18:52, 123
+  750,CLERMONT-FERRAND                        ,FR,+45:47:13,+003:08:58, 331
+  786,MONTELIMAR                              ,FR,+44:34:52,+004:43:59,  73
+  755,EMBRUN                                  ,FR,+44:33:56,+006:30:08, 871
+  756,TARBES - OSSUN                          ,FR,+43:11:17,+000:00:00, 360
+  757,NICE                                    ,FR,+43:38:56,+007:12:32,   2
+  758,BASTIA                                  ,FR,+42:32:26,+009:29:07,  10
+  434,BREST-GUIPAVAS                          ,FR,+48:26:39,-004:24:43,  94
+  785,MONTCORNET                              ,FR,+49:42:00,+004:01:00, 130
+  804,VOUZIERS                                ,FR,+49:24:12,+004:42:12,  96
+  792,PAMIERS                                 ,FR,+43:07:01,+001:37:03, 295
+   39,MARIGNANE                               ,FR,+43:26:16,+005:12:58,   9
+   31,MARSEILLE OBS. PALAIS-LONCHAMP          ,FR,+43:18:18,+005:23:48,  75
+  771,CHATILLON-SUR-SEINE                     ,FR,+47:50:54,+004:34:54, 262
+  776,LA SOUTERRAINE                          ,FR,+46:14:36,+001:28:06, 405
+  322,RENNES-ST JACQUES                       ,FR,+48:04:08,-001:44:02,  36
+  774,FAVERGES-DE-LA-TOUR                     ,FR,+45:35:42,+005:31:48, 360
+  770,CHATILLON-COLIGNY                       ,FR,+47:49:36,+002:50:54, 140
+  767,CATUS                                   ,FR,+44:33:24,+001:20:18, 165
+  778,LE MASSEGROS                            ,FR,+44:18:30,+003:10:36, 870
+  761,BALLOTS                                 ,FR,+47:53:54,-001:02:06,  62
+  773,ESPOEY                                  ,FR,+43:14:54,-000:09:18, 312
+  323,STRASBOURG-ENTZHEIM                     ,FR,+48:32:58,+007:38:25, 150
+  790,ODEREN                                  ,FR,+47:54:00,+006:58:00, 460
+  781,LEZAY                                   ,FR,+46:15:54,-000:00:36, 124
+  759,AMIENS-GLISY                            ,FR,+49:52:18,+002:23:06,  60
+  787,MONTMORILLON                            ,FR,+46:25:00,+000:51:36, 152
+  796,SAINT-GERMAIN-LES-BELLES                ,FR,+45:36:48,+001:29:06, 405
+  764,BRETIGNY-SUR-ORGE                       ,FR,+48:36:00,+002:19:36,  78
+ 2184,ROUEN - BOOS                            ,FR,+49:22:59,+001:10:54, 151
+ 2190,TOURS                                   ,FR,+47:26:40,+000:43:38, 108
+ 2192,BASEL-MULHOUSE                          ,FR,+47:36:52,+007:30:36, 263
+ 2195,LIMOGES - BELLEGARDE                    ,FR,+45:51:40,+001:10:30, 402
+ 2196,LE PUY - LOUDES                         ,FR,+45:04:28,+003:45:50, 833
+ 2199,GOURDON                                 ,FR,+44:44:42,+001:23:48, 260
+ 2200,MILLAU                                  ,FR,+44:07:07,+003:01:07, 712
+ 2203,MONT-DE-MARSAN                          ,FR,+43:54:35,-000:30:01,  59
+ 2205,ST-GIRONS                               ,FR,+43:00:19,+001:06:25, 414
+ 2207,MONTPELLIER-AEROPORT                    ,FR,+43:34:37,+003:57:47,   2
+ 2209,AJACCIO                                 ,FR,+41:55:05,+008:47:34,   5
+11243,TROYES-BARBEREY                         ,FR,+48:19:29,+004:01:12, 112
+11244,PTE DE CHASSIRON                        ,FR,+46:02:49,-001:24:42,  11
+11245,PLOUMANAC'H                             ,FR,+48:49:33,-003:28:23,  55
+  793,PTE DE LA HAGUE                         ,FR,+49:43:31,-001:56:23,   6
+11246,NANCY-OCHEY                             ,FR,+48:34:52,+005:57:35, 336
+11247,BELLE ILE - LE TALUT                    ,FR,+47:17:40,-003:13:06,  34
+11248,CAP CEPET                               ,FR,+43:04:46,+005:56:27, 115
+11249,ORLY                                    ,FR,+48:43:01,+002:23:04,  89
