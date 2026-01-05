@@ -1,10 +1,9 @@
 include("../SpatialBernoulli/SpatialBernoulli.jl")
-station_50Q = CSV.read("data/transformedECAD_stations.csv",DataFrame)
-Yobs=Matrix(CSV.read("data/transformedECAD_Yobs.csv",header=false,DataFrame))
-my_distance =Matrix(CSV.read("data/transformedECAD_locsdistances.csv",header=false,DataFrame))
+station_50Q = CSV.read("./data/transformedECAD_stations.csv",DataFrame)
+Yobs=Matrix(CSV.read("./data/transformedECAD_Yobs.csv",header=false,DataFrame))
+my_distance =Matrix(CSV.read("./data/transformedECAD_locsdistances.csv",header=false,DataFrame))
 
 my_locations = hcat(station_50Q.LON_idx, station_50Q.LAT_idx)
-heatmap(my_distance)
 nlocs = length(my_locations[:, 1])
 
 ##################################################################################
@@ -30,12 +29,12 @@ Threads.@threads for imonth in 1:12
     @time sol_fixednu = fit_mle(init_d, y, wp; order=1/2,maxiters = 10, m=100 * 2, return_sol=false)
 
     # Save to JLD2 file
-    save("../SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2", Dict("d" => sol_fixednu))
+    save("./SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2", Dict("d" => sol_fixednu))
 end
 
 vec_models = Vector{SpatialBernoulli}(undef, 12)
 for imonth in 1:12
-    vec_models[imonth] = load("../SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
+    vec_models[imonth] = load("./SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
 end
 
 
@@ -62,13 +61,13 @@ end
 Ys
 Yobs
 
-include("/home/caroline/Gitlab_SWG_Caro/hmmspa/utils/plot_validation.jl")
+include("../SpatialBernoulli/plot_validation.jl")
 p=compare_ROR_density(Yobs,Ys)
-savefig(p, "/home/caroline/Gitlab_SWG_Caro/hmmspa/SpatialBernoulli/ROR_500sim.png")
+savefig(p, "./SpatialBernoulli/ROR_500sim.png")
 
 p=compare_ROR_histogram(Yobs,Ys)
 Plots.plot!(p, title= "Rain Occurrence Ratio for 37 stations, 500 simulations",size=(1000,500))
-savefig(p, "/home/caroline/Gitlab_SWG_Caro/hmmspa/SpatialBernoulli/ROR_500sim_histo.png")
+savefig(p, "./SpatialBernoulli/ROR_500sim_histo.png")
 
 # plot the parameters
 function Plot(d::Vector{SpatialBernoulli})
@@ -85,25 +84,5 @@ end
 p1,p2=Plot( vec_models)
 p1
 pp=Plots.plot(p,p1,p2,layout= @layout [a;b c])
-savefig(pp, "/home/caroline/Gitlab_SWG_Caro/hmmspa/SpatialBernoulli/ROR_500sim_andparams.png")
-
-
-############## useless code??? ##########
-im=1
-Y = Ymonths[im]
-nt=length(Y[1,:])
-model_full = vec_models[1]
-
-
-Nb = 100
-nlocs = length(my_locations[:, 1])
-begin
-    Ys = zeros(Bool, nlocs, nt, Nb)
-    @time "Simulations  Y" for i in 1:Nb
-        Ys[:, :, i] = rand(model_full, nt);
-    end
-
-end
-pbefore = compare_ROR_histogram(Y, Ys);
-pbefore
+savefig(pp, "./SpatialBernoulli/ROR_500sim_andparams.png")
 

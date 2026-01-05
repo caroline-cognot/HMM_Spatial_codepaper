@@ -64,7 +64,6 @@ print([length(data_stations_50[i].DATE) for i in 1:56])
 # on doit aussi enlever celles qui ont des données peu satisfaisantes : un taux de code 9 trop élevé !
 
 Missing_amount = [sum(data_stations_50[j].Q_RR .== 9) / n for j in 1:length(STAID_50)]
-scatter(Missing_amount)
 leave_out = findall(Missing_amount .> 0)
 data_stations_50Q = data_stations_50[Not(leave_out)]
 STAID_50Q = STAID_50[Not(leave_out)]
@@ -124,11 +123,9 @@ station_50Q.LAT_idx = dms_to_dd.(station_50Q.LAT)
 
 station_50Q.LON_idx = dms_to_dd.(station_50Q.LON)
 
-scatter(station_50Q.LON_idx, station_50Q.LAT_idx)
 my_locations = hcat(station_50Q.LON_idx, station_50Q.LAT_idx)
 using Distances
 my_distance = [haversine(my_locations[i, :], my_locations[j, :]) / 1000 for i in axes(my_locations, 1), j in axes(my_locations, 1)]
-heatmap(my_distance)
 
 nlocs = length(my_locations[:, 1])
 
