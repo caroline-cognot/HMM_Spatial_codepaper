@@ -3,7 +3,7 @@ Pkg.activate("HMMSPAcodepaper")
 Pkg.instantiate()
 
 begin
-    include("../PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
+    include("../13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
     Random.seed!(0)
     # ## Utilities
     using ArgCheck
@@ -20,10 +20,10 @@ begin
     using BenchmarkTools
     using CSV
     using DataFrames
-    include("../PeriodicHMMSpatialBernoulli/estimation_functions_BandR.jl")
+    include("../13PeriodicHMMSpatialBernoulli/estimation_functions_BandR.jl")
 end
 # begin
-#     include("/home/caroline/Gitlab_SWG_Caro/hmmspa/PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
+#     include("/home/caroline/Gitlab_SWG_Caro/hmmspa/13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
 #     Random.seed!(0)
 #     # ## Utilities
 #     using ArgCheck
@@ -61,7 +61,7 @@ end
 # using BenchmarkTools
 # using CSV
 # using DataFrames
-#     include("/home/caroline/Gitlab_SWG_Caro/hmmspa/PeriodicHMMSpatialBernoulli/estimation_functions_BandR.jl")
+#     include("/home/caroline/Gitlab_SWG_Caro/hmmspa/13PeriodicHMMSpatialBernoulli/estimation_functions_BandR.jl")
 # end
 
 
@@ -137,7 +137,7 @@ thetaR[:, 1] .= copy(my_Range_θ[:, 1]) .-log(10)# cheating on initial guess to 
 hmm = Trig2PeriodicHMMspaMemory(fill(1 / my_K, my_K), thetaA, thetaB, thetaR, my_T, my_distance)
 p1, p2, p3 = PlotFitAndReal(model, hmm; indices_sta=1:2);
 pp = plot(p1, p2, p3, layout=@layout [a b; c]; size=(1000, 1000))
-savefig(pp,"./PeriodicHMMSpatialBernoulli/res_sim_data_BandR/pairwise_K"*string(my_K)*"_memory"*string(my_autoregressive_order)*"_T"*string(my_T)*"_Neq"*string(my_N)*"_D"*string(my_D)*"_t"*string(tdist)*"beforefit.png")
+savefig(pp,"./13PeriodicHMMSpatialBernoulli/res_sim_data_BandR/pairwise_K"*string(my_K)*"_memory"*string(my_autoregressive_order)*"_T"*string(my_T)*"_Neq"*string(my_N)*"_D"*string(my_D)*"_t"*string(tdist)*"beforefit.png")
 
 
 tol = 1e-4
@@ -160,4 +160,4 @@ p1, p2, p3 = PlotFitAndReal(hmm, model; indices_sta=1:2);
 
 
 pp = plot(p1, p2, p3, layout=@layout [a b; c]; size=(1000, 1000))
-savefig(pp,"./PeriodicHMMSpatialBernoulli/res_sim_data_BandR/pairwise_K"*string(my_K)*"_memory"*string(my_autoregressive_order)*"_T"*string(my_T)*"_Neq"*string(my_N)*"_D"*string(my_D)*"_t"*string(tdist)*".png")
+savefig(pp,"./13PeriodicHMMSpatialBernoulli/res_sim_data_BandR/pairwise_K"*string(my_K)*"_memory"*string(my_autoregressive_order)*"_T"*string(my_T)*"_Neq"*string(my_N)*"_D"*string(my_D)*"_t"*string(tdist)*".png")

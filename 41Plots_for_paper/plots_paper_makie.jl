@@ -376,7 +376,7 @@ every_year = date_start:Day(1):date_end
 my_N = length(every_year)
 n2t = dayofyear_Leap.(every_year)
 
-doss_save = "../PeriodicHMMSpatialBernoulli/res_real_data/"
+doss_save = "../13PeriodicHMMSpatialBernoulli/res_real_data/"
 
 begin
     Mat_h = Matrix(CSV.read("../00data/transformedECAD_locsdistances.csv", DataFrame, header=false))

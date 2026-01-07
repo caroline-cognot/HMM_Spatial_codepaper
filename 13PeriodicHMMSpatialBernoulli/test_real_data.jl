@@ -3,7 +3,7 @@ Pkg.activate("HMMSPAcodepaper")
 Pkg.instantiate()
 
 begin
-    include("../PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
+    include("../13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
     Random.seed!(0)
     # ## Utilities
     using ArgCheck
@@ -20,7 +20,7 @@ begin
     using BenchmarkTools
     using CSV
     using DataFrames
-    include("../PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
+    include("../13PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
     # means we are using the EM (and not CLEM this is not in this git),  and estimating B then R. Change the file name if you want to maximise for B and R simultaneously.
     using JLD2
 end
@@ -37,7 +37,7 @@ nlocs = length(my_locations[:, 1])
 my_D = size(my_locations, 1)
 
 
-include("../PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
+include("../13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
 
 
 
@@ -61,7 +61,7 @@ my_T = 366 # Period
 
 
 Threads.nthreads()
-doss_save = "./PeriodicHMMSpatialBernoulli/res_real_data/"
+doss_save = "./13PeriodicHMMSpatialBernoulli/res_real_data/"
 
 for my_autoregressive_order in 0:1 #do not do 1 again yet.
 

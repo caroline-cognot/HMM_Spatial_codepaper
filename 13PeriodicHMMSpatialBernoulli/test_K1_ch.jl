@@ -7,8 +7,8 @@ using JuMP, Ipopt
 using LaTeXStrings
 using Distributed
 
-include("../PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
-include("../PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
+include("../13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
+include("../13PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
 include("../SpatialBernoulli/11SpatialBernoulli.jl")
 
 Random.seed!(0)
@@ -334,4 +334,4 @@ end
 
 fig = plot_R_and_time(results, Ds)
 
-save("./PeriodicHMMSpatialBernoulli/estim_parameters_by_D_compact_noprob_N"*string(my_N)*"400.pdf", fig)
+save("./13PeriodicHMMSpatialBernoulli/estim_parameters_by_D_compact_noprob_N"*string(my_N)*"400.pdf", fig)

@@ -26,8 +26,8 @@ nlocs = length(my_locations[:, 1])
 my_D = size(my_locations, 1)
 
 
-include("../PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
-include("../PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
+include("../13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
+include("../13PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
 # means we are using the  EM and not CLEM,  and estimating B then R.
 
 
@@ -73,7 +73,7 @@ n2t = dayofyear_Leap.(every_year)
 
 tdist = 0.3
 maxiter = 100
-doss_save = "./PeriodicHMMSpatialBernoulli/res_real_data/"
+doss_save = "./13PeriodicHMMSpatialBernoulli/res_real_data/"
 
 my_K = 4
 my_degree_of_P = 1

@@ -3,7 +3,7 @@ Pkg.activate("HMMSPAcodepaper")
 Pkg.instantiate()
 
 begin
-    include("../PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
+    include("../13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
     Random.seed!(0)
     # ## Utilities
     using ArgCheck
@@ -20,7 +20,7 @@ begin
     using BenchmarkTools
     using CSV
     using DataFrames
-    include("../PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
+    include("../13PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
 end
 # test --------------------------------------#
 import Distributions.Categorical
@@ -253,7 +253,7 @@ resize_to_layout!(fig_Bcompare)
 fig_Bcompare
 
 # savefigcrop
-savefigcrop(fig_Bcompare, "./PeriodicHMMSpatialBernoulli/res_sim_data/B_true_start_fitted_compare")
+savefigcrop(fig_Bcompare, "./13PeriodicHMMSpatialBernoulli/res_sim_data/B_true_start_fitted_compare")
 
 begin
     fig_R = Figure()
@@ -296,7 +296,7 @@ begin
 
     fig_R
 end
-savefigcrop(fig_R, "./PeriodicHMMSpatialBernoulli/res_sim_data/Compare_R_true_start_fitted")
+savefigcrop(fig_R, "./13PeriodicHMMSpatialBernoulli/res_sim_data/Compare_R_true_start_fitted")
 
 begin
     fig_Q = Figure()
@@ -357,7 +357,7 @@ begin
     resize_to_layout!(fig_Q)
     fig_Q
 end
-savefigcrop(fig_Q, "./PeriodicHMMSpatialBernoulli/res_sim_data/Compare_Q_true_start_fitted")
+savefigcrop(fig_Q, "./13PeriodicHMMSpatialBernoulli/res_sim_data/Compare_Q_true_start_fitted")
 
 #################### m=1 ################"
 
@@ -561,7 +561,7 @@ resize_to_layout!(fig_Bcompare)
 fig_Bcompare
 
 # savefigcrop
-savefigcrop(fig_Bcompare, "./PeriodicHMMSpatialBernoulli/res_sim_data/B_true_start_fitted_compare1")
+savefigcrop(fig_Bcompare, "./13PeriodicHMMSpatialBernoulli/res_sim_data/B_true_start_fitted_compare1")
 
 begin
     fig_R = Figure()
@@ -604,7 +604,7 @@ begin
 
     fig_R
 end
-savefigcrop(fig_R, "./PeriodicHMMSpatialBernoulli/res_sim_data/Compare_R_true_start_fitted1")
+savefigcrop(fig_R, "./13PeriodicHMMSpatialBernoulli/res_sim_data/Compare_R_true_start_fitted1")
 
 begin
     fig_Q = Figure()
@@ -665,5 +665,5 @@ begin
     resize_to_layout!(fig_Q)
     fig_Q
 end
-savefigcrop(fig_Q, "./PeriodicHMMSpatialBernoulli/res_sim_data/Compare_Q_true_start_fitted1")
+savefigcrop(fig_Q, "./13PeriodicHMMSpatialBernoulli/res_sim_data/Compare_Q_true_start_fitted1")
 
