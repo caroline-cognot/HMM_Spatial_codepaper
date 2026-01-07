@@ -3,6 +3,7 @@ Code for the paper "Spatio-temporal generation of precipitation using a Hidden M
 
 **Warning** : some scripts for tests use the `Plots.jl`package, others use the `Makie.jl`package. They are not compatible so it is recommended to kill the julia terminal between launches. Scripts relying on the latter are highlighted in this document. 
 
+**Info** : the results of time-consuming inference are stored on this git, however simulations have not been pushed as they are too voluminous. For now, everything is stored in binary files, which is not efficient. 
 
 The scripts are organised as follows :
 
@@ -54,8 +55,10 @@ Tries the inference method for *K=1* to compare between full and pairwise likeli
 ## 2 - Fitting the intensity model
 **21precip_intensity_marginal_noclass**
 Contains the code for periodic inference and test on simulated data for the EGPD distribution, as well as the fit on real data. 
+
 **22precip_intensity_marginal_withclass**
 Contains the code for constant inference, by class.
+
 **23precip_intensity** (final version, model used in the paper)
 -  **23precip_intensity/EGPD_functions.jl** extends the `ExtendedExtremes.jl`package to periodic parameters, notably adding a low-rain marginal and extending the penalised likelihood to periodic parameters.
 -  **23precip_intensity/EGPD_class.jl** extends the previous file to models with classes.
@@ -66,13 +69,13 @@ Contains the code for constant inference, by class.
 
 
 ## 3- Comparing with the conditionnaly independent model
-**31HMMIndep/** contains the code and result for the conditionnaly independent model, infered on several subsets of stations to highlight the need of a more complex (spatially correlated) model. The main file is **31HMMIndep/test_real_data**
+**31HMMIndep/** contains the code and result for the conditionnaly independent model, infered on several subsets of stations to highlight the need of a more complex (spatially correlated) model. There are two scripts : **31HMMIndep/test_real_data.jl**, aiming at investigating different model sizes, and the well-named **31HMMIndep/prettyplots_indep.jl** which produces a beautiful plot comparing models inferred with different *K* and *D*.
 
 
 ## 4- Plotting 
 **41Plots_folder** contains the code for all plots used in the paper and supplementary materials, as well as others to better understand the model's initial idea, such as results of the conditionnaly independent model in high dimension. They rely on the `Makie` environment, which may make it harder to handle at first but produces *really pretty* graphs. 
 
-**42NAOlike** contains the code to see how the HMM relates to atmospheric circulation, in particular regarding the North Atlantic Oscillation (NOA).  Not pushed yet
+**42NAOlike** contains the code to see how the HMM relates to atmospheric circulation, in particular regarding the North Atlantic Oscillation (NOA). The data is not on the git however, as it is too voluminous. 
 
 
 
