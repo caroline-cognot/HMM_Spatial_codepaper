@@ -21,9 +21,9 @@ md"""
 Compare real data to simulated data : get the real data.
 """
 
-station_50Q = CSV.read("data/transformedECAD_stations.csv",DataFrame)
-Yobs=Matrix(CSV.read("data/transformedECAD_Yobs.csv",header=false,DataFrame))
-my_distance =Matrix(CSV.read("data/transformedECAD_locsdistances.csv",header=false,DataFrame))
+station_50Q = CSV.read("./data/transformedECAD_stations.csv",DataFrame)
+Yobs=Matrix(CSV.read("./data/transformedECAD_Yobs.csv",header=false,DataFrame))
+my_distance =Matrix(CSV.read("./data/transformedECAD_locsdistances.csv",header=false,DataFrame))
 
 my_locations = hcat(station_50Q.LON_idx, station_50Q.LAT_idx)
 
@@ -50,15 +50,23 @@ get the parameters estimated using no mixture.jl
 """
 vec_models = Vector(undef, 12)
 for imonth in 1:12
-    vec_models[imonth] = load("SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
+    vec_models[imonth] = load("./SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
 end
 vec_models
 
-# study month 1
 
 maxiter = 4
 maxiter_m = 10
 
+function in_zero_one(x::Real)
+    if x < 0
+        return 0.001
+    elseif x < 1
+        return x
+    else
+        return 0.999
+    end
+end
 
 for im in 1:12
 
@@ -120,8 +128,8 @@ for im in 1:12
     plot(dfit["logtots"])
     α
     sol = MixtureModel(dists, α)
-    save("MixtureSpatialBernoulli/res_real_data/fitted_month_QMC100" * string(im) * ".jld2", Dict("d" => sol))
-    savefig(plot(dfit["logtots"]), "MixtureSpatialBernoulli/res_real_data/fitted_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days_logtots.png")
+    save("./MixtureSpatialBernoulli/res_real_data/fitted_month_QMC100" * string(im) * ".jld2", Dict("d" => sol))
+    savefig(plot(dfit["logtots"]), "./MixtureSpatialBernoulli/res_real_data/fitted_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days_logtots.png")
 
 
     Nb = 100
@@ -143,7 +151,7 @@ for im in 1:12
     l = @layout [a; b c; d]
     p5 = plot(p, p2, p3, p4, layout=l, size=(1000, 1000))
 
-    savefig(p5, "MixtureSpatialBernoulli/res_real_data/beforeafter_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days.png")
+    savefig(p5, "./MixtureSpatialBernoulli/res_real_data/beforeafter_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days.png")
 end
 
 
@@ -210,8 +218,8 @@ for im in 1:12
     plot(dfit["logtots"])
     α
     sol = MixtureModel(dists, α)
-    save("MixtureSpatialBernoulli/res_real_data/3classes_fitted_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days.jld2", Dict("d" => sol))
-    savefig(plot(dfit["logtots"]), "MixtureSpatialBernoulli/res_real_data/3classes_fitted_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days_logtots.png")
+    save("./MixtureSpatialBernoulli/res_real_data/3classes_fitted_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days.jld2", Dict("d" => sol))
+    savefig(plot(dfit["logtots"]), "./MixtureSpatialBernoulli/res_real_data/3classes_fitted_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days_logtots.png")
 
 
     Nb = 100
@@ -233,5 +241,5 @@ for im in 1:12
     l = @layout [a; b c; d]
     p5 = plot(p, p2, p3, p4, layout=l, size=(1000, 1000))
 
-    savefig(p5, "MixtureSpatialBernoulli/res_real_data/3classes_beforeafter_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days.png")
+    savefig(p5, "./MixtureSpatialBernoulli/res_real_data/3classes_beforeafter_month" * string(im) * "_" * string(maxiter) * "iterEM_" * string(maxiter_m) * "iterM_" * string(nt) * "days.png")
 end

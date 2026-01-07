@@ -4,10 +4,10 @@ using JLD2
 using Plots
 using Dates
 # Spatial Bernoulli model
-include("/home/caroline/Gitlab_SWG_Caro/hmmspa/SpatialBernoulli/SpatialBernoulli.jl")
+include("../SpatialBernoulli/SpatialBernoulli.jl")
 
 # validation plots
-include("/home/caroline/Gitlab_SWG_Caro/hmmspa/utils/plot_validation.jl")
+include("../SpatialBernoulli/plot_validation.jl")
 
 
 md"""
@@ -43,7 +43,7 @@ get the parameters estimated using SpatialBernoulli
 """
 vec_models = Vector{SpatialBernoulli}(undef, 12)
 for imonth in 1:12
-    vec_models[imonth] = load("SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
+    vec_models[imonth] = load("./SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
 end
 vec_models
 
@@ -56,7 +56,7 @@ change name of file if necessary
 vec_modelsZ = Vector{MixtureModel}(undef, 12)
 for imonth in 1:12
     nt = length(Ymonths[imonth][1, :])
-    vec_modelsZ[imonth] = load("MixtureSpatialBernoulli/res_real_data/3classes_fitted_month" * string(imonth) * "_" * string(20) * "iterEM_" * string(20) * "iterM_" * string(nt) * "days.jld2")["d"]
+    vec_modelsZ[imonth] = load("./MixtureSpatialBernoulli/res_real_data/3classes_fitted_month" * string(imonth) * "_" * string(20) * "iterEM_" * string(20) * "iterM_" * string(nt) * "days.jld2")["d"]
 end
 vec_modelsZ
 
@@ -89,7 +89,7 @@ end
 default(fontfamily="Computer Modern")
 pp=plot(p..., layout=(3, 4), size=(1000, 800);leg=:topright)
 
-savefig(pp, "MixtureSpatialBernoulli/res_real_data/3classes_RORresults.png"
+savefig(pp, "./MixtureSpatialBernoulli/res_real_data/3classes_RORresults.png"
 )
 
 plt = [plot() for i in 1:6] 
@@ -136,7 +136,7 @@ end
 
 
 pp = plot(p2, p3, layout=(2, 1), legend=:outerright, size=(1000, 800))
-savefig(pp, "MixtureSpatialBernoulli/res_real_data/3classes_lambda_results.png"
+savefig(pp, "./MixtureSpatialBernoulli/res_real_data/3classes_lambda_results.png"
 )
 
 
@@ -149,6 +149,6 @@ for k in 1:3
 end
 
 p1
-savefig(p1, "MixtureSpatialBernoulli/res_real_data/3classes_range_results.png"
+savefig(p1, "./MixtureSpatialBernoulli/res_real_data/3classes_range_results.png"
 )
 
