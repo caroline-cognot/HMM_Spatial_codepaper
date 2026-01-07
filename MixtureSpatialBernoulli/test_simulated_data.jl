@@ -1,10 +1,10 @@
 # Spatial Bernoulli model
-include("../SpatialBernoulli/SpatialBernoulli.jl")
+include("../11SpatialBernoulli/SpatialBernoulli.jl")
 
 # Mixture fitting 
-include("../MixtureSpatialBernoulli/ExpectationMaximization_source.jl")
-include("../MixtureSpatialBernoulli/estimation_functions.jl")
-include("../SpatialBernoulli/plot_validation.jl")
+include("../12MixtureSpatialBernoulli/ExpectationMaximization_source.jl")
+include("../12MixtureSpatialBernoulli/estimation_functions.jl")
+include("../11SpatialBernoulli/plot_validation.jl")
 
 
 # try the code before starting

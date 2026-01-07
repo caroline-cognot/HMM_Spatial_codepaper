@@ -15,10 +15,10 @@ Pkg.instantiate()
    using Dates
    import StochasticWeatherGenerators.dayofyear_Leap
 
-include("../SpatialBernoulli/SpatialBernoulli.jl")
-station_50Q = CSV.read("./data/transformedECAD_stations.csv",DataFrame)
-Yobs=Matrix(CSV.read("./data/transformedECAD_Yobs.csv",header=false,DataFrame))'
-my_distance =Matrix(CSV.read("./data/transformedECAD_locsdistances.csv",header=false,DataFrame))
+include("../11SpatialBernoulli/SpatialBernoulli.jl")
+station_50Q = CSV.read("./00data/transformedECAD_stations.csv",DataFrame)
+Yobs=Matrix(CSV.read("./00data/transformedECAD_Yobs.csv",header=false,DataFrame))'
+my_distance =Matrix(CSV.read("./00data/transformedECAD_locsdistances.csv",header=false,DataFrame))
 
 my_locations = hcat(station_50Q.LON_idx, station_50Q.LAT_idx)
 heatmap(my_distance)
@@ -45,7 +45,7 @@ date_end = Date(2024) - Day(1)
 using Printf
 every_year = date_start:Day(1):date_end
 n = length(every_year)
-path = "./data/ECA_blended_custom"
+path = "./00data/ECA_blended_custom"
 function collect_data_ECA(STAID::Integer, path::String, var::String="RR"; skipto=21, header=20, url=false)
     file = url ? Base.download(string(path, @sprintf("STAID%06.d.txt", STAID))) : joinpath(path, string("$(uppercase(var))_", @sprintf("STAID%06.d.txt", STAID)))
     if isfile(file)
@@ -110,9 +110,9 @@ Robs = Matrix(reduce(hcat, [0.1 .* data_stations[j].RR for j = 1:ds]))
 Yobs
 z_hat
 using CSV, DelimitedFiles
-CSV.write("./data/transformedECAD_Robs.csv", DataFrame(Robs, :auto), header=false)
-CSV.write("./data/transformedECAD_zhat.csv", DataFrame(z_hat=(z_hat)), header=false)
-CSV.write("./data/transformedECAD_season.csv", DataFrame(season=season(every_year)), header=false)
-CSV.write("./data/transformedECAD_stations.csv", station_50Q, header=true)
-z_hat=CSV.read("./data/transformedECAD_zhat.csv", DataFrame, header=false)
-CSV.write("./data/transformedECAD_zhatbis.csv", DataFrame(z_hat=(z_hat[:,1]),dates=every_year), header=false)
+CSV.write("./00data/transformedECAD_Robs.csv", DataFrame(Robs, :auto), header=false)
+CSV.write("./00data/transformedECAD_zhat.csv", DataFrame(z_hat=(z_hat)), header=false)
+CSV.write("./00data/transformedECAD_season.csv", DataFrame(season=season(every_year)), header=false)
+CSV.write("./00data/transformedECAD_stations.csv", station_50Q, header=true)
+z_hat=CSV.read("./00data/transformedECAD_zhat.csv", DataFrame, header=false)
+CSV.write("./00data/transformedECAD_zhatbis.csv", DataFrame(z_hat=(z_hat[:,1]),dates=every_year), header=false)

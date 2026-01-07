@@ -27,9 +27,9 @@ end
    import StochasticWeatherGenerators.dayofyear_Leap
 
 include("../SpatialBernoulli/SpatialBernoulli.jl")
-station_50Q = CSV.read("./data/transformedECAD_stations.csv",DataFrame)
-Yobs=Matrix(CSV.read("./data/transformedECAD_Yobs.csv",header=false,DataFrame))
-my_distance =Matrix(CSV.read("./data/transformedECAD_locsdistances.csv",header=false,DataFrame))
+station_50Q = CSV.read("./00data/transformedECAD_stations.csv",DataFrame)
+Yobs=Matrix(CSV.read("./00data/transformedECAD_Yobs.csv",header=false,DataFrame))
+my_distance =Matrix(CSV.read("./00data/transformedECAD_locsdistances.csv",header=false,DataFrame))
 
 my_locations = hcat(station_50Q.LON_idx, station_50Q.LAT_idx)
 heatmap(my_distance)

@@ -38,8 +38,8 @@ n2t = n_to_t(my_N, my_T)
 
 
 
-my_distance = Matrix(CSV.read("./data/transformedECAD_locsdistances.csv", DataFrame, header=false))
-my_locations = Matrix(CSV.read("./data/transformedECAD_locs.csv", DataFrame, header=false))
+my_distance = Matrix(CSV.read("./00data/transformedECAD_locsdistances.csv", DataFrame, header=false))
+my_locations = Matrix(CSV.read("./00data/transformedECAD_locs.csv", DataFrame, header=false))
 
 my_D = length(my_locations[:, 1])
 my_index = sample(1:my_D, my_D, replace=false)

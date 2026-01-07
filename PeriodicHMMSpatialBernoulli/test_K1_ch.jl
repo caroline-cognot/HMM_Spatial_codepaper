@@ -9,7 +9,7 @@ using Distributed
 
 include("../PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
 include("../PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
-include("../SpatialBernoulli/SpatialBernoulli.jl")
+include("../SpatialBernoulli/11SpatialBernoulli.jl")
 
 Random.seed!(0)
 
@@ -27,8 +27,8 @@ my_N = 10* my_T # = 50
 n2t = n_to_t(my_N, my_T)
 
 # Load distance matrix & locations
-full_distance = Matrix(CSV.read("./data/transformedECAD_locsdistances.csv", DataFrame, header=false))
-full_locations = Matrix(CSV.read("./data/transformedECAD_locs.csv", DataFrame, header=false))
+full_distance = Matrix(CSV.read("./00data/transformedECAD_locsdistances.csv", DataFrame, header=false))
+full_locations = Matrix(CSV.read("./00data/transformedECAD_locs.csv", DataFrame, header=false))
 full_D = size(full_locations, 1)
 
 ###############################################################################

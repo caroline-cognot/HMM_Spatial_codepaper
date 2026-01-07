@@ -4,19 +4,19 @@ using JLD2
 using Plots
 using Dates
 # Spatial Bernoulli model
-include("../SpatialBernoulli/SpatialBernoulli.jl")
+include("../11SpatialBernoulli/SpatialBernoulli.jl")
 
 # validation plots
-include("../SpatialBernoulli/plot_validation.jl")
+include("../11SpatialBernoulli/plot_validation.jl")
 
 
 md"""
 Compare real data to simulated data : get the real data.
 """
 
-station_50Q = CSV.read("data/transformedECAD_stations.csv",DataFrame)
-Yobs=Matrix(CSV.read("data/transformedECAD_Yobs.csv",header=false,DataFrame))
-my_distance =Matrix(CSV.read("data/transformedECAD_locsdistances.csv",header=false,DataFrame))
+station_50Q = CSV.read("00data/transformedECAD_stations.csv",DataFrame)
+Yobs=Matrix(CSV.read("00data/transformedECAD_Yobs.csv",header=false,DataFrame))
+my_distance =Matrix(CSV.read("00data/transformedECAD_locsdistances.csv",header=false,DataFrame))
 
 my_locations = hcat(station_50Q.LON_idx, station_50Q.LAT_idx)
 
@@ -43,7 +43,7 @@ get the parameters estimated using SpatialBernoulli
 """
 vec_models = Vector{SpatialBernoulli}(undef, 12)
 for imonth in 1:12
-    vec_models[imonth] = load("./SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
+    vec_models[imonth] = load("./11SpatialBernoulli/fitted_month_QMC100" * string(imonth) * ".jld2")["d"]
 end
 vec_models
 
@@ -56,7 +56,7 @@ change name of file if necessary
 vec_modelsZ = Vector{MixtureModel}(undef, 12)
 for imonth in 1:12
     nt = length(Ymonths[imonth][1, :])
-    vec_modelsZ[imonth] = load("./MixtureSpatialBernoulli/res_real_data/3classes_fitted_month" * string(imonth) * "_" * string(20) * "iterEM_" * string(20) * "iterM_" * string(nt) * "days.jld2")["d"]
+    vec_modelsZ[imonth] = load("./12MixtureSpatialBernoulli/res_real_data/3classes_fitted_month" * string(imonth) * "_" * string(20) * "iterEM_" * string(20) * "iterM_" * string(nt) * "days.jld2")["d"]
 end
 vec_modelsZ
 
@@ -89,7 +89,7 @@ end
 default(fontfamily="Computer Modern")
 pp=plot(p..., layout=(3, 4), size=(1000, 800);leg=:topright)
 
-savefig(pp, "./MixtureSpatialBernoulli/res_real_data/3classes_RORresults.png"
+savefig(pp, "./12MixtureSpatialBernoulli/res_real_data/3classes_RORresults.png"
 )
 
 plt = [plot() for i in 1:6] 
@@ -136,7 +136,7 @@ end
 
 
 pp = plot(p2, p3, layout=(2, 1), legend=:outerright, size=(1000, 800))
-savefig(pp, "./MixtureSpatialBernoulli/res_real_data/3classes_lambda_results.png"
+savefig(pp, "./12MixtureSpatialBernoulli/res_real_data/3classes_lambda_results.png"
 )
 
 
@@ -149,6 +149,6 @@ for k in 1:3
 end
 
 p1
-savefig(p1, "./MixtureSpatialBernoulli/res_real_data/3classes_range_results.png"
+savefig(p1, "./12MixtureSpatialBernoulli/res_real_data/3classes_range_results.png"
 )
 

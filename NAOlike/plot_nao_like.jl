@@ -21,7 +21,7 @@ K = 4
 Deg = 1
 local_memory = 1
 
-df_z = CSV.read("../data/transformedECAD_zhat.csv", DataFrame,header=false)
+df_z = CSV.read("../00data/transformedECAD_zhat.csv", DataFrame,header=false)
 df_z.DATE = every_year
 rename!(df_z,:Column1 => :z)
 DJF = [11, 12, 1, 2, 3]

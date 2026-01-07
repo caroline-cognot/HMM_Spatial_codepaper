@@ -305,10 +305,10 @@ LON_min = -6 # West
 LON_max = 10 # East
 LAT_min = 41 # South
 LAT_max = 52 # North
-station_50Q = CSV.read("../data/transformedECAD_stations.csv", DataFrame)
+station_50Q = CSV.read("../00data/transformedECAD_stations.csv", DataFrame)
 station_50Q.STANAME = station_50Q.STANAME .|> shortname
-Yobs = Matrix(CSV.read("../data/transformedECAD_Yobs.csv", header=false, DataFrame))
-Robs = Matrix(CSV.read("../data/transformedECAD_Robs.csv", DataFrame, header=false)[:, :])'
+Yobs = Matrix(CSV.read("../00data/transformedECAD_Yobs.csv", header=false, DataFrame))
+Robs = Matrix(CSV.read("../00data/transformedECAD_Robs.csv", DataFrame, header=false)[:, :])'
 
 station_name = station_50Q.STANAME
 STAID = station_50Q.STAID
@@ -317,8 +317,8 @@ LAT_idx = station_50Q.LAT_idx
 
 LON_idx = station_50Q.LON_idx
 
-locsdata = CSV.read("../data/transformedECAD_stations.csv", DataFrame, header=true)
-locations = Matrix(CSV.read("../data/transformedECAD_locs.csv", DataFrame, header=false))
+locsdata = CSV.read("../00data/transformedECAD_stations.csv", DataFrame, header=true)
+locations = Matrix(CSV.read("../00data/transformedECAD_locs.csv", DataFrame, header=false))
 locsdata.LON = locations[:, 1]
 locsdata.LAT = locations[:, 2]
 value = fill(0, length(LON_idx))
@@ -329,7 +329,7 @@ FR_map_spell = map_with_stations(LON_idx, LAT_idx, value; station_name=string.(S
 savefigcrop(FR_map_spell, "./plots_paper/map_rien")
 
 
-my_distance = Matrix(CSV.read("../data/transformedECAD_locsdistances.csv", header=false, DataFrame))
+my_distance = Matrix(CSV.read("../00data/transformedECAD_locsdistances.csv", header=false, DataFrame))
 my_locations = hcat(station_50Q.LON_idx, station_50Q.LAT_idx)
 
 prettytable= station_50Q[:,[1,2,4,5,6]]
@@ -379,7 +379,7 @@ n2t = dayofyear_Leap.(every_year)
 doss_save = "../PeriodicHMMSpatialBernoulli/res_real_data/"
 
 begin
-    Mat_h = Matrix(CSV.read("../data/transformedECAD_locsdistances.csv", DataFrame, header=false))
+    Mat_h = Matrix(CSV.read("../00data/transformedECAD_locsdistances.csv", DataFrame, header=false))
 
 
     my_K = 4
@@ -754,7 +754,7 @@ idx_all = [intersect(yea, mon) for yea in idx_year, mon in idx_months];
 
 select_year = [51, 33, 31, 27, 4]
 
-ẑ = CSV.read("../data/transformedECAD_zhatbis.csv", DataFrame,header=false).Column1
+ẑ = CSV.read("../00data/transformedECAD_zhatbis.csv", DataFrame,header=false).Column1
 select_years = unique(year.(every_year))[select_year]
 ẑ_per_cat = [findall(ẑ .== k) for k in 1:my_K]
 begin
