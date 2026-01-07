@@ -54,6 +54,7 @@ Tries the inference method for *K=1* to compare between full and pairwise likeli
 ## Plotting 
 **Plots_folder** contains the code for all plots used in the paper and supplementary materials, as well as others to better understand the model's initial idea, such as results of the conditionnaly independent model in high dimension. They rely on the `Makie` environment, which may make it harder to handle at first but produces *really pretty* graphs. 
 
+**NAOlike** contains the code to see how the HMM relates to atmospheric circulation, in particular regarding the North Atlantic Oscillation (NOA).  Not pushed yet
 
 
 
