@@ -1,3 +1,5 @@
 # *.png
 # 13PeriodicHMMSpatialBernoulli/res_real_data/parameters/*
 42NAOlike/*/*.jld2
+41Plots_for_paper/*.jld2
+23precip_intensity/res_real_data/periodicEGPD_K42_Sim_ZYR.jld2
