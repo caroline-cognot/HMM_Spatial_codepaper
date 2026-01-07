@@ -28,7 +28,7 @@ The scripts are organised as follows :
 - **12MixtureSpatialBernoulli/test_real_data.jl** proposes some tests for the simulation and inference. Plots results according to the `Plots` library. Only a small number of EM iterations performed. Plots the before/after parameters and ROR distribution to check the optimisation's relevance. Only K=3 and K=4 are tested.
 - **12MixtureSpatialBernoulli/compare_nomix_mix.jl** compares the results in ROR between basic SpatialBernoulli and MixtureSpatialBernoulli on real data. As it is, only the version with 3 classes is computed, but the file names can be changed inside the script to accomodate other choices
 
-**13PeriodicHMMSpatialBernoulli/** contains the code for estimating, simulating and evaluating the full HMM with spatial emissions as used in the stochastic weather generator. The period is always noted *T* or alternatively, *my_T*, while the number of hidden states is noted *K* or *my_K*. The memory *m* denotes the absence (*m=0*) or presence (*m=1*) of memory in the local rain probability. *D* is the number of locations in the model (in the paper, *D=37*).
+**13PeriodicHMMSpatialBernoulli/** (final version, model used in the paper) contains the code for estimating, simulating and evaluating the full HMM with spatial emissions as used in the stochastic weather generator. The period is always noted *T* or alternatively, *my_T*, while the number of hidden states is noted *K* or *my_K*. The memory *m* denotes the absence (*m=0*) or presence (*m=1*) of memory in the local rain probability. *D* is the number of locations in the model (in the paper, *D=37*).
 - **13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl**
     - *Dependencies* : `SmoothPeriodicStatsModels` for the periodic parameterisation
     - Model definition : PeriodicHMMSpaMemory(a= initial probabilities, A=transition probabilities, R= spatial scales, B=rain probabilities,h=distance matrix). A is of size *K \times K	\times T*, R of size *K \times T*, B is of size *K \times T \times D \times m* .
@@ -49,9 +49,27 @@ The scripts are organised as follows :
    Implements the inference for real station data. Also get the ICL criterion for choice at the end.
 - **13PeriodicHMMSpatialBernoulli/test_K1_ch.jl** 
 Tries the inference method for *K=1* to compare between full and pairwise likelihood. In practice, this code should belong to the **SpatialBernoulli** folder, except the HMM was so much better implemented that considering *K=1, d=0, m=0* as a special case was better than just trying the SpatialBernoulli code.    
-- **13PeriodicHMMSpatialBernoulli/real_data_getZ.jl** : uses the Viterbi algorithm to get most liekly sequence of hidden states for use in the rain model. Also formats the rain intensity data to a dataframe.
+- **13PeriodicHMMSpatialBernoulli/real_data_getZ.jl** : uses the Viterbi algorithm to get most likely sequence of hidden states for use in the rain model. Also formats the rain intensity data to a dataframe.
 
-## Plotting 
+## 2 - Fitting the intensity model
+**21precip_intensity_marginal_noclass**
+Contains the code for periodic inference and test on simulated data for the EGPD distribution, as well as the fit on real data. 
+**22precip_intensity_marginal_withclass**
+Contains the code for constant inference, by class.
+**23precip_intensity** (final version, model used in the paper)
+-  **23precip_intensity/EGPD_functions.jl** extends the `ExtendedExtremes.jl`package to periodic parameters, notably adding a low-rain marginal and extending the penalised likelihood to periodic parameters.
+-  **23precip_intensity/EGPD_class.jl** extends the previous file to models with classes.
+- **23precip_intensity/covariance_functions.jl** defines Spatial Gaussian processes and possible necessary functions. 
+- **23precip_intensity/01_marginal_estimation.jl** is the script to be used in order to infer the marginal parameters for the rain intensity, then transform to a truncated normal distribution according to the occurrence and intensity model parameters. 
+- **23precip_intensity/02_covariance_estimation.jl** is the script to be used in order to infer the covariance parameters for the rain intensity. Be careful that it can take a while as the data is quite large.
+- **23precip_intensity/03_simulation.jl** is the script to be used in order to simulate the intensity model. Relies on dependency `TruncatedMVN`. The plotting parts are commented, as all plots are now in a common folder, however as they are written in the more basic `Plots.jl` one may want to use them instead.
+
+
+## 3- Comparing with the conditionnaly independent model
+**31HMMIndep/** contains the code and result for the conditionnaly independent model, infered on several subsets of stations to highlight the need of a more complex (spatially correlated) model. The main file is **31HMMIndep/test_real_data**
+
+
+## 4- Plotting 
 **41Plots_folder** contains the code for all plots used in the paper and supplementary materials, as well as others to better understand the model's initial idea, such as results of the conditionnaly independent model in high dimension. They rely on the `Makie` environment, which may make it harder to handle at first but produces *really pretty* graphs. 
 
 **42NAOlike** contains the code to see how the HMM relates to atmospheric circulation, in particular regarding the North Atlantic Oscillation (NOA).  Not pushed yet
@@ -61,7 +79,8 @@ Tries the inference method for *K=1* to compare between full and pairwise likeli
 
 ## Utilities
 **utils/** contains code for several useful functions:
-    - **utils/fast_bivariate_cdf.jl** uses the approximation of https://github.com/david-cortes/approxcdf to evaluate bivariate normal integrals 
-    - **utils/maps.jl** has useful functions for plotting maps of France with some station information.
-    - **utils/seasons_and_other_dates.jl** has two functions to extract months and seasons in dates.
+
+- **utils/fast_bivariate_cdf.jl** uses the approximation of https://github.com/david-cortes/approxcdf to evaluate bivariate normal integrals 
+- **utils/maps.jl** has useful functions for plotting maps of France with some station information.
+- **utils/seasons_and_other_dates.jl** has two functions to extract months and seasons in dates.
 

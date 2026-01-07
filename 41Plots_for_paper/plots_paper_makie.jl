@@ -789,12 +789,11 @@ degree_of_P = 2 # degree of trigo in rain intensity
 T = 366
 
 
-@load "../precip_censored_gaussian/res_real_data/periodicEGPD_K" * string(K) * string(degree_of_P) * ".jld2" di
+@load "../23precip_intensity/res_real_data/periodicEGPD_K" * string(K) * string(degree_of_P) * ".jld2" di
 
 # plot the parameters
 
-modellist_noK = JLD2.load("../precip_amount_withclassinmarginal_boundxi/res_real_data/EGPD_constant_noK.jld2", "modellist")
-modellist = JLD2.load("../precip_amount_noclass_boundxi/res_real_data/periodicEGPD" * string(degree_of_P) * ".jld2", "di")
+modellist = JLD2.load("../21precip_intensity_marginal_noclass/res_real_data/periodicEGPD" * string(degree_of_P) * ".jld2", "di")
 
 function fig_marginal_param(stations)
     fig_marginals = Figure(fontsize=17)
@@ -863,8 +862,7 @@ savefigcrop("./plots_paper/4trydeg2sim_other.pdf", fig_marginals_other)
 ######## get latent covariance model       ##################################
 #############################################################################
 
-covmodel = load("../precip_censored_gaussian/res_real_data/GMcov_withmarginalsdeg" * string(degree_of_P) * ".jld2")["fitted"]
-covmodel = load("../precip_censored_gaussian/res_real_data/GMcov_withmarginalsdeg" * string(degree_of_P) * ".jld2")["fitted"]
+covmodel = load("../23precip_intensity/res_real_data/GMcov_withmarginalsdeg" * string(degree_of_P) * ".jld2")["fitted"]
 
 ################# plot the covariance model ###################################
 coordll = [locsdata.LON locsdata.LAT]
@@ -908,7 +906,7 @@ end
 savefigcrop("./plots_paper/covariance_fitted.pdf", fig_cov)
 
 ######################################################################################################################
-data = JLD2.load("../precip_censored_gaussian/res_real_data/periodicEGPD_K$(my_K)$(degree_of_P)_Sim_ZYR.jld2")
+data = JLD2.load("../23precip_intensity/res_real_data/periodicEGPD_K$(my_K)$(degree_of_P)_Sim_ZYR.jld2")
 Rs = data["Rs"]
 Ys = data["Ys"]
 Zs = data["Zs"]
@@ -1414,6 +1412,7 @@ savefigcrop("./plots_paper/corplot.pdf", fig_cor)
 ######## ROR  autocor and distribution      ################################
 ############################################################################
 ## to do the actual simulations, uncomment the following lines
+
 # import Distributions: Categorical
 # Random.seed!(12345)
 # Ysnostate = zeros(Bool, D, length(n2t), Nb)
@@ -1421,7 +1420,8 @@ savefigcrop("./plots_paper/corplot.pdf", fig_cor)
 #     z, Y = my_rand(hmmspa1, n2t; seq=true)
 #     Ysnostate[:, :, i] = Y'
 # end
-# #get Ysindep from other_models.jl
+
+# #get Ysindep from HMMIndep folder
 # hmm_fit = load("HMMIndep/K" * string(my_K) * "DegP" * string(my_degree_of_P) * "memory" * string(my_autoregressive_order) * ".jld2")["hmm"]
 # begin
 #     zs = zeros(Int, length(n2t), Nb)
@@ -1431,9 +1431,11 @@ savefigcrop("./plots_paper/corplot.pdf", fig_cor)
 #     end
 # end
 
-Ysnostate = JLD2.load("../precip_censored_gaussian/res_real_data/K1_Y.jld2")["Ysnostate"]
-Ysindep = JLD2.load("../precip_censored_gaussian/res_real_data/K4_indep_Y.jld2")["Ysindep"]
-Ysm0 = JLD2.load("../precip_censored_gaussian/res_real_data/K4_m0_Y.jld2")["Ys"]
+# technically, also added hmmspa with memory = 0, but the lines are not there ?
+
+Ysnostate = JLD2.load("K1_Y.jld2")["Ysnostate"]
+Ysindep = JLD2.load("K4_indep_Y.jld2")["Ysindep"]
+Ysm0 = JLD2.load("K4_m0_Y.jld2")["Ys"]
 
 RRmax = 0
 RORo = [mean(r .> RRmax) for r in eachcol(Yobs)]
