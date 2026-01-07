@@ -43,9 +43,20 @@ The scripts are organised as follows :
     Implements the inference procedure for the HMM with spatial emission. In the M-step, the parameters are estimated directly : A first (maximising independant sums), then B and R at the same time. Is not used by default in the tests.
 - **PeriodicHMMSpatialBernoulli/test_simulated_data.jl** 
     Relies on `CairoMakie.jl`for prettier plots. Makes a synthetic example with 2 states, using real data locations, to show the estimation procedure works for both *m=0* and *m=1*. Outputs graphs showing the comparison between true model, starting model in the inference, and estimated parameters.
-- **PeriodicHMMSpatialBernoulli/test_simulated_data.jl** 
-    Relies on `CairoMakie.jl`for prettier plots. Makes a synthetic example with 2 states, using real data locations, to show the estimation procedure works for both *m=0* and *m=1*. Outputs graphs showing the comparison between true model, starting model in the inference, and estimated parameters.
-    
+- **PeriodicHMMSpatialBernoulli/test_simulated_data_BandR.jl** 
+    Same as previous file but using **estimation_functions_BandR.jl** instead, and does not use `Makie`.
+- **PeriodicHMMSpatialBernoulli/test_real_data.jl** 
+   Implements the inference for real station data. Also get the ICL criterion for choice at the end.
+- **PeriodicHMMSpatialBernoulli/test_K1_ch.jl** 
+Tries the inference method for *K=1* to compare between full and pairwise likelihood. In practice, this code should belong to the **SpatialBernoulli** folder, except the HMM was so much better implemented that considering *K=1, d=0, m=0* as a special case was better than just trying the SpatialBernoulli code.    
+- **PeriodicHMMSpatialBernoulli/real_data_getZ.jl** : uses the Viterbi algorithm to get most liekly sequence of hidden states for use in the rain model. Also formats the rain intensity data to a dataframe.
+
+## Plotting 
+**Plots_folder** contains the code for all plots used in the paper and supplementary materials, as well as others to better understand the model's initial idea, such as results of the conditionnaly independent model in high dimension. They rely on the `Makie` environment, which may make it harder to handle at first but produces *really pretty* graphs. 
+
+**NAOlike** contains the code to see how the HMM relates to atmospheric circulation, in particular regarding the North Atlantic Oscillation (NOA).  
+
+
 
 
 ## Utilities
