@@ -1,7 +1,7 @@
 # HMMSPAcodepaper
 Code for the paper "Spatio-temporal generation of precipitation using a Hidden Markov Model, extended extreme distributions and conditional Gaussian fields" 
 
-[hmmrain.drawio (3).pdf](https://github.com/user-attachments/files/24560317/hmmrain.drawio.3.pdf)
+![Overview of model parameters](hmmrain.schema.pdf)
 
 **Info** : some scripts for tests use the `Plots.jl`package, others use the `Makie.jl`package. They are not compatible so it is recommended to kill the julia terminal between launches. Scripts relying on the latter are highlighted in this document. 
 
