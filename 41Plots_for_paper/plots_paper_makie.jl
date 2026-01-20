@@ -588,10 +588,10 @@ savefigcrop("./plots_paper/raincharac.pdf", fig_month_RR)
 #############################################################################
 
 
- p_FR_map_mean_prob1 = map_with_stations(LON_idx, LAT_idx, [[mean((hmmspa.B[k, :, j, 1])) for j in 1:D] for k in 1:my_K], colorbar_show=true, colorbar_label=L"\mathbb{P}(Y_s^{(n)} = 1\mid Z = k,Y_s^{(n-1)} =0)", precision_scale=50)
+ p_FR_map_mean_prob1 = map_with_stations(LON_idx, LAT_idx, [[mean((hmmspa.B[k, :, j, 1])) for j in 1:D] for k in 1:my_K], select_plot, colorbar_show=true, colorbar_label=L"\overline{\lambda_{k,s,0}}", precision_scale=50)
 savefigcrop("./plots_paper" * "/RainProbaMap_K" * string(my_K) * "_resu_" * string(length(n2t)) * "days" * "_degree" * string(my_degree_of_P) * "_maxiter" * string(maxiter) * "_m" * string(my_autoregressive_order) * "_R0" * string(R0) * "_QMCm" * string(QMC_m) * "previousdry.pdf", p_FR_map_mean_prob1)
 
-p_FR_map_mean_prob2 = map_with_stations(LON_idx, LAT_idx, [[mean((hmmspa.B[k, :, j, 2])) for j in 1:D] for k in 1:my_K], colorbar_show=true, colorbar_label=L"\mathbb{P}(Y_s^{(n)} = 1\mid Z = k,Y_s^{(n-1)}=1)", precision_scale=50)
+p_FR_map_mean_prob2 = map_with_stations(LON_idx, LAT_idx, [[mean((hmmspa.B[k, :, j, 2])) for j in 1:D] for k in 1:my_K],select_plot, colorbar_show=true, colorbar_label=L"\overline{ \lambda_{k,s,1}}", precision_scale=50)
 savefigcrop("./plots_paper" * "/RainProbaMap_K" * string(my_K) * "_resu_" * string(length(n2t)) * "days" * "_degree" * string(my_degree_of_P) * "_maxiter" * string(maxiter) * "_m" * string(my_autoregressive_order) * "_R0" * string(R0) * "_QMCm" * string(QMC_m) * "previouswet.pdf", p_FR_map_mean_prob2)
 
 
@@ -605,7 +605,7 @@ month_labels = [string(monthabbr(m)[1]) for m in 1:12]
 
 # Generate one plot per station (only first selected plot gets legend)
 begin
-    fig_proba_rain = Figure()
+    fig_proba_rain = Figure(fontsize=19)
 
     for (idx, j) in enumerate(select_plot[[1, 5, 2, 6, 4, 3]])
         row = (idx - 1) ÷ 3 + 1
@@ -614,11 +614,13 @@ begin
         if col > 1
             ax = Axis(fig_proba_rain[row, col],
                 title="$(station_50Q.STANAME[j])",
-                limits=(0, 367, 0, 1), yticks=0:0.2:1, width=200, height=200,
+                limits=(0, 367, 0, 1), yticks=0:0.2:1,   width=170 * 1.25,
+                height=170 ,
                 ylabel=L"\lambda_{k,s,h}^{(t)}")
             hideydecorations!(ax; label=true, ticklabels=true, ticks=false, grid=false, minorgrid=true, minorticks=false)
         else
-            ax = Axis(fig_proba_rain[row, col], width=200, height=200,
+            ax = Axis(fig_proba_rain[row, col],  width=170 * 1.25,
+            height=170,
                 title="$(station_50Q.STANAME[j])",
                 limits=(0, 367, 0, 1), yticks=0:0.2:1,
                 ylabel=L"\lambda_{k,s,h}^{(t)}")
@@ -668,7 +670,7 @@ savefigcrop("./plots_paper" * "/RainProba_K" * string(my_K) * "_resu_" * string(
 month_days = dayofyear_Leap.(Date.(2000, 1:12))
 month_labels = [string(monthabbr(m)[1]) for m in 1:12]
 begin
-    fig_ρ = Figure()
+    fig_ρ = Figure(fontsize=19)
     ax = Axis(fig_ρ[1, 1],
         # title=L"Spatial scale parameter ",
         ylabel=L"Spatial scale $\rho_{CY,k}^{(t)}$ (km)",
@@ -700,7 +702,7 @@ savefigcrop("./plots_paper" * "/R_K" * string(my_K) * "_resu_" * string(length(n
 #############################################################################
 
 begin
-    fig_Q = Figure()
+    fig_Q = Figure(fontsize=19)
 
     for k in 1:my_K
         row = (k - 1) ÷ 2 + 1
@@ -796,7 +798,7 @@ T = 366
 modellist = JLD2.load("../21precip_intensity_marginal_noclass/res_real_data/periodicEGPD" * string(degree_of_P) * ".jld2", "di")
 
 function fig_marginal_param(stations)
-    fig_marginals = Figure(fontsize=17)
+    fig_marginals = Figure(fontsize=19)
     ww = 185
     hh = 150
     xticks = (vcat(dayofyear_Leap.(Date.(2000, 1:12)), 366), vcat(["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"], ""))
@@ -925,7 +927,7 @@ make_range(y, step=1) = range(extrema(y)..., step=step)
 begin #spells (Makie)
     # -------------------- DRY SPELLS --------------------
     dry_or_wet = 1 # dry
-    fig_spell_dry = Figure()
+    fig_spell_dry = Figure(fontsize=19)
     for (idx, j) in enumerate(select_plot[[1, 5, 2, 6, 4, 3]])
         row = (idx - 1) ÷ 3 + 1
         col = (idx - 1) % 3 + 1
@@ -934,7 +936,9 @@ begin #spells (Makie)
             title=station_50Q.STANAME[j],
             xlabel=(row == 2 ? "Nb of days" : ""),
             ylabel=(col == 1 ? "Distribution" : ""),
-            yscale=log10)
+            yscale=log10,
+            width=170 * 1.25,
+            height=170)
 
         all_spells = len_spell_simu[:, j, dry_or_wet]
         spell_range = 1:1:(1+maximum(vcat(reduce(vcat, all_spells), len_spell_hist[j, dry_or_wet])))
@@ -979,15 +983,20 @@ begin #spells (Makie)
         if col > 1
             hideydecorations!(ax; label=true, ticklabels=true, ticks=false, grid=false, minorgrid=true, minorticks=false)
         end
-        if idx == 2
-            #     axislegend(ax, position=:rt)
-            axislegend(ax,
-                # fig_spell_dry, bbox=BBox(550, 220, 55, 350),
-                [PolyElement(color=:grey, alpha=0.5), [PolyElement(color=:red, alpha=0.5),
-                        LineElement(color=:red)], LineElement(color=:blue)],
-                [L"Simu $q_{0,100}$", L"Simu $q_{25,75}$", "Obs"], position=:rt)
-        end
+        # if idx == 2
+        #     #     axislegend(ax, position=:rt)
+        #     axislegend(ax,
+        #         # fig_spell_dry, bbox=BBox(550, 220, 55, 350),
+        #         [PolyElement(color=:grey, alpha=0.5), [PolyElement(color=:red, alpha=0.5),
+        #                 LineElement(color=:red)], LineElement(color=:blue)],
+        #         [L"Simu $q_{0,100}$", L"Simu $q_{25,75}$", "Obs"], position=:rt)
+        # end
     end
+    Legend(
+        fig_spell_dry[:, 4],
+        [PolyElement(color=:grey, alpha=0.5), [PolyElement(color=:red, alpha=0.5),
+        LineElement(color=:red)], LineElement(color=:blue)],
+[L"Simu $q_{0,100}$", L"Simu $q_{25,75}$", "Obs"])
     rowgap!(fig_spell_dry.layout, 2)
     resize_to_layout!(fig_spell_dry)
     fig_spell_dry
@@ -998,7 +1007,7 @@ savefigcrop("./plots_paper" * "/dry_spells_few_K" * string(my_K) * "_resu_" * st
 begin #spells (Makie)
     # -------------------- WET SPELLS --------------------
     dry_or_wet = 2 # wet
-    fig_spell_wet = Figure()
+    fig_spell_wet = Figure(fontsize=19)
     for (idx, j) in enumerate(select_plot[[1, 5, 2, 6, 4, 3]])
         row = (idx - 1) ÷ 3 + 1
         col = (idx - 1) % 3 + 1
@@ -1007,8 +1016,10 @@ begin #spells (Makie)
             title=station_50Q.STANAME[j],
             xlabel=(row == 2 ? "Nb of days" : ""),
             ylabel=(col == 1 ? "Distribution" : ""),
-            yscale=log10, xticks=0:10:50)
-
+            yscale=log10,
+            width=170 * 1.25,
+            height=170, xticks=0:10:50)
+ 
         all_spells = len_spell_simu[:, j, dry_or_wet]
         spell_range = 1:1:(1+maximum(vcat(reduce(vcat, all_spells), len_spell_hist[j, dry_or_wet])))
 
@@ -1052,15 +1063,20 @@ begin #spells (Makie)
         if col > 1
             hideydecorations!(ax; label=true, ticklabels=true, ticks=false, grid=false, minorgrid=true, minorticks=false)
         end
-        if idx == 2
-            #     axislegend(ax, position=:rt)
-            axislegend(ax,
-                # fig_spell_wet, bbox=BBox(550, 220, 55, 350),
-                [PolyElement(color=:grey, alpha=0.5), [PolyElement(color=:red, alpha=0.5),
-                        LineElement(color=:red)], LineElement(color=:blue)],
-                [L"Simu $q_{0,100}$", L"Simu $q_{25,75}$", "Obs"], position=:rt)
-        end
+        # if idx == 2
+        #     #     axislegend(ax, position=:rt)
+        #     axislegend(ax,
+        #         # fig_spell_wet, bbox=BBox(550, 220, 55, 350),
+        #         [PolyElement(color=:grey, alpha=0.5), [PolyElement(color=:red, alpha=0.5),
+        #                 LineElement(color=:red)], LineElement(color=:blue)],
+        #         [L"Simu $q_{0,100}$", L"Simu $q_{25,75}$", "Obs"], position=:rt)
+        # end
     end
+    Legend(
+        fig_spell_wet[:, 4],
+        [PolyElement(color=:grey, alpha=0.5), [PolyElement(color=:red, alpha=0.5),
+        LineElement(color=:red)], LineElement(color=:blue)],
+[L"Simu $q_{0,100}$", L"Simu $q_{25,75}$", "Obs"])
     rowgap!(fig_spell_wet.layout, 2)
     resize_to_layout!(fig_spell_wet)
     fig_spell_wet
@@ -1205,7 +1221,7 @@ acfrange = 0:9
 @views aa = [autocor(Rs[j, :, i], acfrange) for j in 1:D, i in 1:Nb]
 
 begin
-    fig_ACF = Figure()
+    fig_ACF = Figure(fontsize=19)
 
     for (idx, j) in enumerate(select_plot[[1, 5, 2, 6, 4, 3]])
         row = (idx - 1) ÷ 3 + 1
@@ -1214,14 +1230,15 @@ begin
         ax = Axis(fig_ACF[row, col],
             title=station_50Q.STANAME[j],
             xlabel=(row == 2 ? "Lag" : ""),
-            ylabel=(col == 1 ? "ACF" : ""))
+            ylabel=(col == 1 ? "ACF" : ""),width=170 * 1.25,
+            height=170)
 
         # Plot observations
         obs_acf = autocor(Robs[j, :], acfrange)
         errorline!(ax, acfrange, stack(aa[j, :], dims=1)';
             secondarycolor=mycolors[4],
             color=mycolors[4],
-            label=(idx == 1 ? L"Simu $q_{0,100}$" : nothing),
+            label=(idx == 1 ? nothing : nothing),
             errortype=:percentile,
             percentiles=[0, 100],
             alpha=1,
@@ -1229,16 +1246,20 @@ begin
             linewidth=2,
             centertype=:median)
         scatterlines!(ax, acfrange, obs_acf;
-            label=(idx == 1 ? "Obs" : nothing),
+            label=(idx == 1 ? nothing : nothing),
             linewidth=1.5,
             color=:blue, marker=:circle, alpha=0.95)
         # Plot simulation ACF with errorline!
 
-        if idx == 1
-            axislegend(ax, position=:rt)
-        end
+        # if idx == 1
+        #     axislegend(ax, position=:rt)
+        # end
     end
-
+    Legend(
+        fig_ACF[:, 4],
+        [ [PolyElement(color=:red, alpha=0.5),
+        LineElement(color=:red)], LineElement(color=:blue)],
+[L"Simu $q_{0,100}$", "Obs"])
     resize_to_layout!(fig_ACF)
     fig_ACF
 end
@@ -1572,29 +1593,44 @@ begin
         scatter!(ax_acf, 0:maxlag, acf_obs, color=:blue, markersize=7)
         col > 1 && hideydecorations!(ax_acf, grid=false)
     end
-    Legend(fig_ROR[:, 5],
-        [
-            [
-                [LineElement(color=:gray), PolyElement(color=:gray, alpha=0.2)],
-                [LineElement(color=mycolors[2]), PolyElement(color=mycolors[2], alpha=0.2)],
-                [LineElement(color=mycolors[4]), PolyElement(color=mycolors[4], alpha=0.2)]
-            ],
-            [MarkerElement(color=:blue, marker=:circle, markersize=8)]
-        ],
-        [
-            [
-                L"Ind $K = 4$",
-                L"SPA $K = 1$",
-                L"SPA $K = %$my_K$"
-            ],
-            ["Observations"]
-        ],
-        [L"HMM $m=1$", " "]
-    )
+    # Legend(fig_ROR[:, 5],
+    #     [
+    #         [
+    #             [LineElement(color=:gray), PolyElement(color=:gray, alpha=0.2)],
+    #             [LineElement(color=mycolors[2]), PolyElement(color=mycolors[2], alpha=0.2)],
+    #             [LineElement(color=mycolors[4]), PolyElement(color=mycolors[4], alpha=0.2)]
+    #         ],
+    #         [MarkerElement(color=:blue, marker=:circle, markersize=8)]
+    #     ],
+    #     [
+    #         [
+    #             "HMM1_Ind_K4",
+    #             "HMM1_Spa_K1",
+    #             "HMM1_Spa_K4"
+    #         ],
+    #         [" Observations"]
+    #     ],
+    #     ["_", " "]
+    # )
+    Legend(
+    fig_ROR[:, 5],
+    [
+        [LineElement(color=:gray), PolyElement(color=:gray, alpha=0.2)],
+        [LineElement(color=mycolors[2]), PolyElement(color=mycolors[2], alpha=0.2)],
+        [LineElement(color=mycolors[4]), PolyElement(color=mycolors[4], alpha=0.2)],
+        MarkerElement(color=:blue, marker=:circle, markersize=8)
+    ],
+    [
+        "HMM1_Ind_K4",
+        "HMM1_Spa_K1",
+        "HMM1_Spa_K4",
+        "Observations"
+    ]
+)
+
     resize_to_layout!(fig_ROR)
     fig_ROR
 end
-
 savefigcrop("./plots_paper" * "/RORplots_K" * string(my_K) * "_resu_" * string(length(n2t)) * "days" * "_degree" * string(my_degree_of_P) * "_maxiter" * string(maxiter) * "_m" * string(my_autoregressive_order) * "_R0" * string(R0) * "_QMCm" * string(QMC_m) * ".pdf", fig_ROR)
 
 #############################################################################
@@ -1604,13 +1640,16 @@ savefigcrop("./plots_paper" * "/RORplots_K" * string(my_K) * "_resu_" * string(l
 
 QQ = [5, 95]
 function fig_ror_spell(perc)
-    fig_spell = Figure(fontsize=17)
+    fig_spell = Figure(fontsize=19)
     wwwww = 220
     hhhhh = 150
     for m in eachindex(idx_seasons)
-        row, col = (m - 1) ÷ 2 + 1, (m - 1) % 2 + 1
+        # row, col = (m - 1) ÷ 2 + 1, (m - 1) % 2 + 1
+        row=1
+         col = m
+
         ax = Axis(fig_spell[row, col], yscale=log10,
-            xlabel=row == 2 ? "Nb of days" : "",
+            xlabel=row == 1 ? "Nb of days" : "",
             ylabel=col == 1 ? "Probability" : "",
             title=seasonname[m],
             xticks=(0:3:15),
@@ -1672,29 +1711,44 @@ function fig_ror_spell(perc)
         end
 
     end
-    Legend(fig_spell[:, 3],
-        [
-            [
-                [LineElement(color=mycolors[6], linestyle=:dash), PolyElement(color=mycolors[6], alpha=0.2)]
-            ],
-            [
-                [LineElement(color=:gray), PolyElement(color=:gray, alpha=0.2)],
-                [LineElement(color=mycolors[2]), PolyElement(color=mycolors[2], alpha=0.2)],
-                [LineElement(color=mycolors[4]), PolyElement(color=mycolors[4], alpha=0.2)]
-            ],
-            [MarkerElement(color=:blue, marker=:circle, markersize=8)]
+    Legend(
+        fig_spell[:, 5],
+        [                [LineElement(color=mycolors[6], linestyle=:dash), PolyElement(color=mycolors[6], alpha=0.2)],
+            [LineElement(color=:gray), PolyElement(color=:gray, alpha=0.2)],
+            [LineElement(color=mycolors[2]), PolyElement(color=mycolors[2], alpha=0.2)],
+            [LineElement(color=mycolors[4]), PolyElement(color=mycolors[4], alpha=0.2)],
+            MarkerElement(color=:blue, marker=:circle, markersize=8)
         ],
-        [
-            [L"SPA $K = %$my_K$"],
-            [
-                L"Ind $K = 4$",
-                L"SPA $K = 1$",
-                L"SPA $K = %$my_K$"
-            ],
-            ["Observations"]
-        ],
-        [L"HMM $m=0$", L"HMM $m=1$", " "]
+        [   "HMM0_Spa_K4",
+            "HMM1_Ind_K4",
+            "HMM1_Spa_K1",
+            "HMM1_Spa_K4",
+            "Observations"
+        ]
     )
+    # Legend(fig_spell[:, 3],
+    #     [
+    #         [
+    #             [LineElement(color=mycolors[6], linestyle=:dash), PolyElement(color=mycolors[6], alpha=0.2)]
+    #         ],
+    #         [
+    #             [LineElement(color=:gray), PolyElement(color=:gray, alpha=0.2)],
+    #             [LineElement(color=mycolors[2]), PolyElement(color=mycolors[2], alpha=0.2)],
+    #             [LineElement(color=mycolors[4]), PolyElement(color=mycolors[4], alpha=0.2)]
+    #         ],
+    #         [MarkerElement(color=:blue, marker=:circle, markersize=8)]
+    #     ],
+    #     [
+    #         [L"SPA $K = %$my_K$"],
+    #         [
+    #             L"Ind $K = 4$",
+    #             L"SPA $K = 1$",
+    #             L"SPA $K = %$my_K$"
+    #         ],
+    #         ["Observations"]
+    #     ],
+    #     [L"HMM $m=0$", L"HMM $m=1$", " "]
+    # )
     # colsize!(fig_spell.layout, 3, Relative(1/6))
     resize_to_layout!(fig_spell)
     fig_spell
@@ -1731,7 +1785,7 @@ function fig_QER(qmax)
     m = 1
     maxlag = 10
 
-    fig_QER = Figure(fontsize=18)
+    fig_QER = Figure(fontsize=19)
     wwww_qer = 200
     hhhh_qer = 150
 
@@ -1752,7 +1806,7 @@ function fig_QER(qmax)
             yticks=0:0.2:0.8)
 
         errorlinehist!(ax_dist, [RORsq[i][idx_seasons[m]] for i in 1:Nb];
-            label=label = m == 1 ? "HMM-SPA" : nothing,
+            label=label = m == 1 ? nothing : nothing,
             color=mycolors[4],
             secondarycolor=mycolors[4],
             normalization=:probability,
@@ -1762,7 +1816,7 @@ function fig_QER(qmax)
             alpha=1,
             secondaryalpha=0.4,
             centertype=:median)
-        scatter!(ax_dist, xax, [mean(RORoq[idx_seasons[m]] .== x) for x in xax], color=:blue, markersize=7, label=m == 1 ? "Observations" : nothing)
+        scatter!(ax_dist, xax, [mean(RORoq[idx_seasons[m]] .== x) for x in xax], color=:blue, markersize=7, label=m == 1 ? nothing : nothing)
 
 
         # ylims!(ax_dist, 0, ymaxli[i])
@@ -1770,9 +1824,7 @@ function fig_QER(qmax)
         col > 1 && hideydecorations!(ax_dist, grid=false, minorgrid=false)
         ylims!(ax_dist, -0.05, 0.6)
         xlims!(ax_dist, -0.01, 0.4)
-        if col == 1
-            axislegend(ax_dist, position=:rt)
-        end
+      
     end
 
     # Row 2: ACF plots
@@ -1803,6 +1855,17 @@ function fig_QER(qmax)
 
 
     end
+    Legend(
+        fig_QER[:, 5],
+        [                
+            [LineElement(color=mycolors[4]), PolyElement(color=mycolors[4], alpha=0.2)],
+            MarkerElement(color=:blue, marker=:circle, markersize=8)
+        ],
+        [   
+            "Simulations",
+            "Observations"
+        ]
+    )
     resize_to_layout!(fig_QER)
     fig_QER
 end
@@ -1832,7 +1895,7 @@ K = 4
 m = 1
 maxlag = 10
 begin
-    fig_ROR1mm = Figure(fontsize=17)
+    fig_ROR1mm = Figure(fontsize=19)
     wwww_1mm = 200
     hhhh_1mm = 150
 
@@ -1852,7 +1915,7 @@ begin
             height=hhhh_1mm)
 
         errorlinehist!(ax_dist, [RORs1mm[i][idx_seasons[m]] for i in 1:Nb];
-            label=m == 1 ? "HMM-SPA" : nothing,
+            label=m == 1 ? nothing : nothing,
             color=mycolors[4],
             secondarycolor=mycolors[4],
             normalization=:probability,
@@ -1864,13 +1927,13 @@ begin
             centertype=:median)
 
         scatter!(ax_dist, xax, [mean(RORo1mm[idx_seasons[m]] .== x) for x in xax],
-            color=:blue, markersize=6, label=m == 1 ? "Observations" : nothing)
+            color=:blue, markersize=6, label=m == 1 ? nothing : nothing)
 
         ylims!(ax_dist, -0.01, 0.2)
         col > 1 && hideydecorations!(ax_dist, grid=false, minorgrid=false)
-        if col == 1
-            axislegend(ax_dist, position=:rt)
-        end
+        # if col == 1
+        #     axislegend(ax_dist, position=:rt)
+        # end
     end
 
     # Row 2: ACF plots
@@ -1899,7 +1962,17 @@ begin
         scatter!(ax_acf, 0:maxlag, acf_obs, color=:blue, markersize=7)
         col > 1 && hideydecorations!(ax_acf, grid=false, minorgrid=false)
     end
-
+    Legend(
+        fig_ROR1mm[:, 5],
+        [                
+            [LineElement(color=mycolors[4]), PolyElement(color=mycolors[4], alpha=0.2)],
+            MarkerElement(color=:blue, marker=:circle, markersize=8)
+        ],
+        [   
+            "Simulations",
+            "Observations"
+        ]
+    )
     resize_to_layout!(fig_ROR1mm)
     fig_ROR1mm
 end

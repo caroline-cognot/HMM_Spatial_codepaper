@@ -140,13 +140,14 @@ end
 
 function map_with_stations(LON_idx, LAT_idx, value=[1 for _ in eachindex(LON_idx)]; station_name=nothing, show_value=false, fontsize=15,
     precision_scale=50, colorbar_label, colorbar_show=false, colorbar_limits=:none,
-    LON_min=-5, LON_max=10.5, LAT_min=41, LAT_max=52, w=nothing, title="")
+    LON_min=-5.5, LON_max=10.5, LAT_min=41, LAT_max=52, w=nothing, title="")
 
 # add adjacency plot between locations.
     borders_ne = naturalearth("admin_0_boundary_lines_land", precision_scale)
     coastlines_ne = naturalearth("coastline", precision_scale)
     rivers_ne = naturalearth("rivers_lake_centerlines_scale_rank", precision_scale)
     ocean_ne = naturalearth("ocean", precision_scale)
+    cmap = [:black, :red]
 
     fig = GeoMakie.with_theme(GeoMakie.theme_latexfonts(), fontsize=fontsize) do
         fig = GeoMakie.Figure()
@@ -158,7 +159,7 @@ function map_with_stations(LON_idx, LAT_idx, value=[1 for _ in eachindex(LON_idx
         GeoMakie.lines!(ax, GeoMakie.to_multilinestring.(coastlines_ne.geometry); color=:gray, linewidth=0.75)
         GeoMakie.lines!(ax, GeoMakie.to_multilinestring.(rivers_ne.geometry); linewidth=0.5)
 
-        sc = GeoMakie.scatter!(ax, LON_idx, LAT_idx; color=value, markersize=15, colormap=:plasma, colorrange=((3.5minimum(value)) ÷ 4, (4.5maximum(value)) ÷ 4))
+        sc = GeoMakie.scatter!(ax, LON_idx, LAT_idx; color=value, markersize=15, colormap=cmap, colorrange=(0, 1))
         if w !== nothing
             scale = 1 / maximum(w)
 
@@ -195,6 +196,82 @@ function map_with_stations(LON_idx, LAT_idx, value=[1 for _ in eachindex(LON_idx
 
         GeoMakie.colsize!(fig.layout, 1, GeoMakie.Aspect(1, 1.0))
         GeoMakie.resize_to_layout!(fig)
+        fig
+    end
+    return fig
+end
+
+function map_with_stations(LON_idx, LAT_idx, value::AbstractArray{V}, select_plot::Array{Int}; station_name=nothing, show_value=false, fontsize=15,
+    precision_scale=50, colorbar_label=:none, colorbar_show=false, colorbar_limits=:none,
+    LON_min=-5, # West
+    LON_max=10.5, # Est
+    LAT_min=41, # South
+    LAT_max=52 # North
+) where {V<:AbstractArray}
+    K = length(value)
+
+    borders_ne = naturalearth("admin_0_boundary_lines_land", precision_scale)
+    coastlines_ne = naturalearth("coastline", precision_scale)
+    rivers_ne = naturalearth("rivers_lake_centerlines_scale_rank", precision_scale)
+    ocean_ne = naturalearth("ocean", precision_scale)
+
+    fig = GeoMakie.with_theme(GeoMakie.theme_latexfonts(), fontsize=fontsize) do
+        fig = GeoMakie.Figure(size=(800, 250))
+        ax = [GeoMakie.GeoAxis(fig[1:3, k], dest="+proj=merc", xgridvisible=false, ygridvisible=false, xticklabelsvisible=true, yticklabelsvisible=true, xticksvisible=false, yticksvisible=false, title=L"Z = %$k") for k in 1:K]
+        for k in 1:K
+            GeoMakie.xlims!(ax[k], LON_min, LON_max)
+            GeoMakie.ylims!(ax[k], LAT_min, LAT_max)
+            GeoMakie.poly!(ax[k], ocean_ne.geometry)
+            GeoMakie.lines!(ax[k], GeoMakie.to_multilinestring.(borders_ne.geometry); color=:black, linestyle=:dash, linewidth=0.75)
+            GeoMakie.lines!(ax[k], GeoMakie.to_multilinestring.(coastlines_ne.geometry); color=:gray, linewidth=0.75)
+            GeoMakie.lines!(ax[k], GeoMakie.to_multilinestring.(rivers_ne.geometry); linewidth=0.5)
+
+            sc = GeoMakie.scatter!(ax[k], LON_idx, LAT_idx; color=value[k], markersize=11, colormap=GeoMakie.Reverse(:plasma), colorrange=(0, 1))
+            if show_value == true
+                for i in eachindex(station_name)
+                    if i == 7
+                        GeoMakie.text!(ax[k], [LON_idx[i]], [LAT_idx[i]]; text=string.([value[i]]), color=:black, font=:bold, offset=(-2, 0), align=(:left, :top), fontsize=19)
+                    else
+                        GeoMakie.text!(ax[k], [LON_idx[i]], [LAT_idx[i]]; text=string.([value[i]]), color=:black, font=:bold, offset=(8, 10), align=(:left, :top), fontsize=19)
+                    end
+                end
+                ## GeoMakie.text!(ax, LON_idx, LAT_idx; text=string.(value), color=:black, font=:bold, offset=(8, 10), align=(:left, :top), fontsize=18)
+
+                if station_name !== nothing
+                    ## GeoMakie.text!(ax, LON_idx, LAT_idx; text=station_name, color=:black, font=:bold, offset=(-7, 4), align=(:center, :bottom))
+                    for i in eachindex(station_name)
+                        if i ∈ [7, 2]
+                            GeoMakie.text!(ax[k], [LON_idx[i]], [LAT_idx[i]]; text=station_name[i], color=:black, font=:bold, offset=(-14, 4), align=(:center, :bottom))
+                        elseif i == 3
+                            GeoMakie.text!(ax[k], [LON_idx[i]], [LAT_idx[i]]; text=station_name[i], color=:black, font=:bold, offset=(0, 4), align=(:center, :bottom))
+                        else
+                            GeoMakie.text!(ax[k], [LON_idx[i]], [LAT_idx[i]]; text=station_name[i], color=:black, font=:bold, offset=(-7, 4), align=(:center, :bottom))
+                        end
+                    end
+                end
+            end
+
+# Highlight selected stations with red circles
+if !isempty(select_plot)
+    GeoMakie.scatter!(
+        ax[k],
+        LON_idx[select_plot],
+        LAT_idx[select_plot];
+        marker = :circle,
+        markersize = 12,
+        color = :transparent,
+        strokecolor = :black,
+        strokewidth = 2
+    )
+end
+
+            if colorbar_show == true && k == K
+                GeoMakie.Colorbar(fig[:, K+1], sc, height=GeoMakie.Relative(1), label=colorbar_label)
+                GeoMakie.colgap!(fig.layout, -7)
+            end
+            k > 1 && GeoMakie.hideydecorations!(ax[k], ticks=false)
+
+        end
         fig
     end
     return fig
