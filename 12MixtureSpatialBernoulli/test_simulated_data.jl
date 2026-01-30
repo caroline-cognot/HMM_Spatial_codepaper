@@ -45,6 +45,17 @@ dists = copy(components(mix))
 dists
 plot(dfit["logtots"])
 α
+#took 150s
+
+α2 = copy(probs(mix))
+dists2 = copy(components(mix))
+
+# Estimation
+@time dfit2 = fit_mle_vfast!(α2, dists2, y, PairwiseClassicEM(); order="fixed", maxiter=20, QMC_m=30, factor_dmax=1 / 3, maxiter_m=10)
+dists
+plot(dfit2["logtots"])
+α
+#took 3 s
 
 
 Nb = 100
