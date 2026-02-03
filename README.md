@@ -33,7 +33,7 @@ The scripts are organised as follows :
 - **12MixtureSpatialBernoulli/test_real_data.jl** proposes some tests for the simulation and inference. Plots results according to the `Plots` library. Only a small number of EM iterations performed. Plots the before/after parameters and ROR distribution to check the optimisation's relevance. Only K=3 and K=4 are tested.
 - **12MixtureSpatialBernoulli/compare_nomix_mix.jl** compares the results in ROR between basic SpatialBernoulli and MixtureSpatialBernoulli on real data. As it is, only the version with 3 classes is computed, but the file names can be changed inside the script to accomodate other choices
 
-**13PeriodicHMMSpatialBernoulli/** (final version, model used in the paper) contains the code for estimating, simulating and evaluating the full HMM with spatial emissions as used in the stochastic weather generator. The period is always noted *T* or alternatively, *my_T*, while the number of hidden states is noted *K* or *my_K*. The memory *m* denotes the absence (*m=0*) or presence (*m=1*) of memory in the local rain probability. *D* is the number of locations in the model (in the paper, *D=37*).
+**13PeriodicHMMSpatialBernoulli/** (final version, model used in the paper) contains the code for estimating, simulating and evaluating the full HMM with spatial emissions as used in the stochastic weather generator. The period is always noted *T* or alternatively, *my_T*, while the number of hidden states is noted *K* or *my_K*. The memory *m* denotes the absence (*m=0*) or presence (*m=1*) of memory in the local rain probability. *D* is the number of locations in the model (in the paper, *D=37*). The estimation relies on the hybrid EM algorithm described in the paper.
 - **13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl**
     - *Dependencies* : `SmoothPeriodicStatsModels` for the periodic parameterisation
     - Model definition : PeriodicHMMSpaMemory(a= initial probabilities, A=transition probabilities, R= spatial scales, B=rain probabilities,h=distance matrix). A is of size *K \times K	\times T*, R of size *K \times T*, B is of size *K \times T \times D \times m* .
@@ -57,7 +57,7 @@ Tries the inference method for *K=1* to compare between full and pairwise likeli
 - **13PeriodicHMMSpatialBernoulli/real_data_getZ.jl** : uses the Viterbi algorithm to get most likely sequence of hidden states for use in the rain model. Also formats the rain intensity data to a dataframe.
 
 
-**14PeriodicHMMSpatialBernoulli_CLEM/** contains the code for estimating the full HMM with spatial emissions as used in the stochastic weather generator, but with a true Pairwise-EM algorithm. The tests are only on simulated data and show the PEM is much slower than the EAPM.
+**14PeriodicHMMSpatialBernoulli_CLEM/** contains the code for estimating the full HMM with spatial emissions as used in the stochastic weather generator, but with a true Pairwise-EM algorithm. 
 
 ## 2 - Fitting the intensity model
 **21precip_intensity_marginal_noclass**
