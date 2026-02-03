@@ -56,7 +56,8 @@ The scripts are organised as follows :
 Tries the inference method for *K=1* to compare between full and pairwise likelihood. In practice, this code should belong to the **SpatialBernoulli** folder, except the HMM was so much better implemented that considering *K=1, d=0, m=0* as a special case was better than just trying the SpatialBernoulli code.    
 - **13PeriodicHMMSpatialBernoulli/real_data_getZ.jl** : uses the Viterbi algorithm to get most likely sequence of hidden states for use in the rain model. Also formats the rain intensity data to a dataframe.
 
-**14PeriodicHMMSpatialBernoulli/** contains the code for estimating the full HMM with spatial emissions as used in the stochastic weather generator, but with a true Pairwise-EM algorithm. The tests are only on simulated data and show the PEM is much slower than the EAPM.
+
+**14PeriodicHMMSpatialBernoulli_CLEM/** contains the code for estimating the full HMM with spatial emissions as used in the stochastic weather generator, but with a true Pairwise-EM algorithm. The tests are only on simulated data and show the PEM is much slower than the EAPM.
 
 ## 2 - Fitting the intensity model
 **21precip_intensity_marginal_noclass**
