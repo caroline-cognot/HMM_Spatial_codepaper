@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 include("../11SpatialBernoulli/SpatialBernoulli.jl")
 include("../11SpatialBernoulli/plot_validation.jl")
 import Base.size

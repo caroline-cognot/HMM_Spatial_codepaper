@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 
 select_month = function (m::Int64, dates, Y::AbstractMatrix)
     indicesm = findall(month.(dates) .== m)

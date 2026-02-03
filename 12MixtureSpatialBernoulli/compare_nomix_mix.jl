@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 using CSV
 using DataFrames
 using JLD2

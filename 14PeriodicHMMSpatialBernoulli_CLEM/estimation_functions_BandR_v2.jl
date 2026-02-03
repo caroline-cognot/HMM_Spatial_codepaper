@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 ########### functions in progress #########
 #### todo : update_TB_memory1!
 

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 import Pkg
 cd(@__DIR__)
 Pkg.activate(@__DIR__)

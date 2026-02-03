@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 # from include("SpatialBernoulli/SpatialBernoulli.jl")
 """
     SpatialBernoulli{TR<:Real, TS<:Real, TO<:Real, AV<:AbstractVector, AM<:AbstractMatrix, AAM<:AbstractMatrix}

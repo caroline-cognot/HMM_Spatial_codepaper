@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 struct MixedUniformTailModel
     dists::Vector{MixedUniformTail}   # one distribution per class
     K::Int                           # number of classes

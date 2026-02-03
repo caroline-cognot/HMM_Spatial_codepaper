@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 using Pkg
 Pkg.activate("HMMSPAcodepaper")
 Pkg.instantiate()

@@ -1,3 +1,6 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
+#  ©2026 EDF
+
 import CairoMakie, GeoMakie
 using CairoMakie.Makie: GeometryBasics
 using NaturalEarth

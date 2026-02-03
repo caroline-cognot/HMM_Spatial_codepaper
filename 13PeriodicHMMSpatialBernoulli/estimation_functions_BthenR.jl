@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 include("../utils/fast_bivariate_cdf.jl")
 
     # Random and Distributions

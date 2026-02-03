@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 # study ROR
 using Plots
 function ROR(y::AbstractMatrix)

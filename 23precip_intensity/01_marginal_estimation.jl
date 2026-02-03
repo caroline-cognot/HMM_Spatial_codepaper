@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 skip_estim_marginals = true
 skip_plots_marginals = false
 skip_normalization =true

@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 # This code tries to fit a HMM-indep model with K=4 for many stations, more than David's paper.
 # The goal is to show that when looking at less stations, it works better. 
 # And that adding spatial dependence is key when adding more stations.

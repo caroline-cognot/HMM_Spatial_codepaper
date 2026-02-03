@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 cd(@__DIR__)
 using LaTeXStrings
 using CSV, DataFrames

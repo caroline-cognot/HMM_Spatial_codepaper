@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 using CSV,DataFrames
 include("../11SpatialBernoulli/SpatialBernoulli.jl")
 station_50Q = CSV.read("./00data/transformedECAD_stations.csv",DataFrame)

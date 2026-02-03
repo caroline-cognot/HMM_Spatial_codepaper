@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 # Spatial Bernoulli model
 include("../11SpatialBernoulli/SpatialBernoulli.jl")
 

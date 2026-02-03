@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 using Base.Threads
 
 include("../23precip_intensity/EGPD_functions.jl")

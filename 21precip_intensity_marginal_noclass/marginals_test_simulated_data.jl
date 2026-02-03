@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 include("../23precip_intensity/EGPD_functions.jl")
 
 # test on simulated data with no zeroes

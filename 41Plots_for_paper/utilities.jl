@@ -1,3 +1,4 @@
+# Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 dayofyear_Leap(d) = @. dayofyear(d) + ((!isleapyear(d)) & (month(d) > 2))
 
 vec_triu(A) = A[tril(trues(size(A)), -1)] # return striclty upper diagonal element of matrix A
