@@ -249,9 +249,13 @@ gf_mvnorma_trunc = TruncatedMVNormal(fill(0., size(gf.coords, 1)), cov_spatiotem
 X = TruncatedMVN.sample(gf_mvnorma_trunc, 1)
 #this verion is a lot better. takes 0.01s for one sim, so 0.05 hour for 18000 samples  !
 begin
+    fontsize = 18
+    update_theme!(fontsize=fontsize, theme_latexfonts())
+    
+    
     markers = [p == 1 ? :circle : :cross for p in Pluie_en_station]
 
-    fig_exemple = Figure()
+    fig_exemple = Figure(resolution = (900, 400))
 
     ax1 = Axis(
         fig_exemple[1, 1],
@@ -264,7 +268,7 @@ ylims!(ax1,-4.5,4.5)
     scatter!(ax1, x[(X.>Psect[1])],X[(X.>Psect[1])][:, 1], color=:blue, marker=:circle, label=L"X_R(s) \mid Y_s = 1")
 
     # Add legend entries for markers
-    axislegend(ax1, position=:rb,orientation=:horizontal)
+    axislegend(ax1, position=:rb)
     # Legend(fig_exemple, bbox=BBox(650, 220, 650, 35),
     #     [MarkerElement(color=:black, marker=:circle), MarkerElement(color=:black, marker=:cross)],
     #     [L"Y_s =1", L"Y_s =0"])
@@ -282,7 +286,7 @@ ylims!(ax1,-4.5,4.5)
         end
     end
     mycolors
-    ax2 = Axis(fig_exemple[2, 1], xlabel=L"s", ylabel="Precip amount (mm)")
+    ax2 = Axis(fig_exemple[1, 2], xlabel=L"s", ylabel="Precip amount (mm)")
     markers2 = [p == 1 ? :circle : :cross for p in Pluie_en_station]
     scatter!(ax2, x, precip_amount[:, 1], color=:green, marker=markers2, label=L"R_s")
     # Legend(fig_exemple, bbox=BBox(650, 220, 35, 350),

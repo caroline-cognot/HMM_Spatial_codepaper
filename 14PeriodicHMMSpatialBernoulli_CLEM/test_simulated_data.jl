@@ -58,27 +58,6 @@ my_distance = Matrix(CSV.read("./00data/transformedECAD_locsdistances.csv", Data
 my_locations = Matrix(CSV.read("./00data/transformedECAD_locs.csv", DataFrame, header=false))
 my_D = length(my_locations[:, 1])
 
-
-# # with triangulation weigths
-# using DelaunayTriangulation
-
-# points = [
-#     (my_locations[:, 1][j], my_locations[:, 2][j]) for j in 1:size(my_locations)[1]
-# ];
-# tri = triangulate(points);
-
-# wp = zeros(size(my_locations)[1], size(my_locations)[1]);
-# for i in 1:size(my_locations)[1]
-    
-#     set = get_neighbours(tri, i)
-#     for j in set
-#         if j > 0
-#             wp[i, j] = 1.0;
-#         end
-#     end
-# end
-# wp;
-
 wp = 1.0 .* (my_distance .< tdist*maximum(my_distance))
 p = scatter(my_locations[:, 1], my_locations[:, 2]);
 
@@ -130,7 +109,7 @@ Y_past = rand(Bool, my_autoregressive_order, my_D)
 
 
 
-include("../PeriodicHMMSpatialBernoulli_CLEM/estimation_functions_BandR_v2.jl")
+include("../14PeriodicHMMSpatialBernoulli_CLEM/estimation_functions_BandR_v2.jl")
 
 # test --------------------------------------#
 

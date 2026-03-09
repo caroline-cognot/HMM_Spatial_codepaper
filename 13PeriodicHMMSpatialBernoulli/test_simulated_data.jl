@@ -33,7 +33,7 @@ my_degree_of_P = 1
 
 my_autoregressive_order = 0 #
 
-my_N = my_T * 50
+my_N = my_T * 25
 n2t = n_to_t(my_N, my_T)
 
 

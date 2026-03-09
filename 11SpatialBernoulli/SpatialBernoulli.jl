@@ -8,7 +8,6 @@ using BesselK
 using BesselK: _gamma
 import ForwardDiff # ForwardDiff is currently the only ad supported by `BesselK`
 using Optimization
-# this code is not optimized ; it does not use the 
 include("../utils/fast_bivariate_cdf.jl")
 """
     SpatialBernoulli{TR<:Real, TS<:Real, TO<:Real, AV<:AbstractVector, AM<:AbstractMatrix, AAM<:AbstractMatrix}
