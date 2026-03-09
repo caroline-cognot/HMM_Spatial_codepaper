@@ -1,7 +1,7 @@
 Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 
 # HMMSPAcodepaper
-Code for the paper "Spatio-temporal generation of precipitation using a Hidden Markov Model, extended extreme distributions and conditional Gaussian fields" 
+Code for the paper "Spatio-temporal generation of precipitation using a Hidden Markov Model, extended extreme distributions and conditional Gaussian fields" - preprint on https://hal.science/hal-05523768v1
 
 ![Overview of model parameters](hmmrain.schema.pdf)
 
