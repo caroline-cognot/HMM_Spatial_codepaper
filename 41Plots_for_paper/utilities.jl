@@ -215,7 +215,7 @@ function compute_error(
 end
 
 
-# Makie errorline recipe
+# Makie errorline recipe (from D Metivier)
 """
     errorline!(ax, x, y; kwargs...)
     errorline!(ax, y; kwargs...)
@@ -365,6 +365,112 @@ function CairoMakie.Makie.plot!(plt::ErrorLine)
     return nothing
 end
 
+CairoMakie.Makie.@recipe ErrorScatter (x, y) begin
+    CairoMakie.Makie.documented_attributes(Lines)...
+    "Error style - :ribbon, :stick, or :plume"
+    errorstyle = :ribbon
+    "Center type - :mean or :median"
+    centertype = :mean
+    "Error type - :std, :sem, or :percentile"
+    errortype = :std
+    "Percentiles to use if errortype === :percentile"
+    percentiles = [25, 75]
+    "Color for secondary elements (sticks/plume lines)"
+    secondarycolor = @inherit linecolor
+    "Alpha value of plume/ribbon/sticks"
+    secondaryalpha = 0.1
+    "Width of error sticks (fraction of x-range)"
+    stickwidth = 0.01
+    "Number of plume lines to plot"
+    secondarylines = 100
+    "Width of secondary lines"
+    secondarylinewidth = 1
+    "Width of whiskers"
+    whiskerwidth = 2
+end
+
+function CairoMakie.Makie.plot!(plt::ErrorScatter)
+    # Get converted arguments
+    x = plt.x[]
+    y = plt.y[]
+
+    # Extract attributes (use [] to get values from observables)
+    errorstyle = plt.errorstyle[]
+    centertype = plt.centertype[]
+    errortype = plt.errortype[]
+    percentiles = plt.percentiles[]
+
+    secondarylines = plt.secondarylines[]
+
+    valid_attributes = CairoMakie.Makie.shared_attributes(plt, Scatter)
+
+    # Check y orientation
+    ndims(y) > 2 && error("ndims(y) > 2")
+
+    if size(y, 1) !== length(x)
+        error("size(y, 1) !== length(x)")
+    elseif ndims(y) == 2 && size(y, 1) != length(x) && size(y, 2) == length(x) # Check if y needs to be transposed
+        error("y appears to be transposed. Ensure that the first dimension of y matches length(x)")
+    end
+
+    # Compute center and distribution for each value of x
+    y_central, y_error = compute_error(y, centertype, errortype, percentiles)
+    y_central = dropdims(y_central; dims=2)
+    if errortype !== :percentile
+        y_error = dropdims(y_error; dims=2)
+    end
+
+    if errorstyle === :ribbon
+        if errortype !== :percentile
+            band!(plt, x, y_central .- y_error, y_central .+ y_error,
+                color=plt.secondarycolor, alpha=plt.secondaryalpha
+            )
+        else
+            band!(plt, x, y_central - y_error[1][:, 1], y_central + y_error[2][:, 1],
+                color=plt.secondarycolor, alpha=plt.secondaryalpha
+            )
+        end
+    elseif errorstyle === :stick
+        # Compute error bar bounds
+        if errortype === :percentile
+            error_low = y_error[1]
+            error_high = y_error[2]
+        else
+            error_low = y_error
+            error_high = y_error
+        end
+
+        # Draw error bars using Makie's errorbars!
+        errorbars!(plt, x, y_central, error_low, error_high,
+            color=plt.secondarycolor, alpha=plt.secondaryalpha, linewidth=plt.secondarylinewidth,
+            whiskerwidth=20)
+
+    elseif errorstyle === :plume
+        if secondarylines isa Integer
+            sub_idx = 1:secondarylines
+        elseif secondarylines isa AbstractVector
+            sub_idx = secondarylines
+        else
+            error("secondarylines must be Integer or AbstractVector, got $(typeof(secondarylines))")
+        end
+
+        for j in sub_idx
+            lines!(plt, x, y[:, j],
+                color=plt.secondarycolor, alpha=plt.secondaryalpha, linewidth=plt.secondarylinewidth,
+            )
+        end
+    else
+        error("Invalid error style. Valid symbols include :ribbon, :stick, or :plume.")
+    end
+
+    # Base line
+    scatter!(plt, valid_attributes, x, y_central)
+
+
+    return nothing
+end
+
+
 
 # xerror = 1:10
 # yerror = fill(NaN, 10, 100, 3)
@@ -461,6 +567,33 @@ CairoMakie.Makie.@recipe ErrorLineHist (x, y) begin
     # scale_to = nothing
 end
 
+CairoMakie.Makie.@recipe ErrorScatterHist (x, y) begin
+    CairoMakie.Makie.documented_attributes(ErrorScatter)...
+
+    """
+    Sets the number of bins if set to an integer or the edges of bins if set to
+    an sorted collection of real numbers.
+    """
+    bins = 15 # Int or iterable of edges
+    """
+    Sets the normalization applied to the histogram. Possible values are:
+
+    * `:pdf`: Normalize by sum of weights and bin sizes. Resulting histogram
+      has norm 1 and represents a probability density function.
+    * `:density`: Normalize by bin sizes only. Resulting histogram represents
+      count density of input and does not have norm 1. Will not modify the
+      histogram if it already represents a density (`h.isdensity == 1`).
+    * `:probability`: Normalize by sum of weights only. Resulting histogram
+      represents the fraction of probability mass for each bin and does not have
+      norm 1.
+    * `:none`: Do not normalize.
+    """
+    normalization = :pdf
+    "Sets optional statistical weights."
+    weights = nothing
+    # "Scales the histogram by a common factor such that the largest bin reaches the given value."
+    # scale_to = nothing
+end
 
 _filternans(vs::NTuple{1,AbstractVector}) = filter!.(isfinite, vs)
 function _filternans(vs::NTuple{N,AbstractVector}) where {N}
@@ -518,6 +651,32 @@ function CairoMakie.Makie.plot!(plt::ErrorLineHist)
         y[:, i] += h_i.weights .+ eps() # for numerical stability when in log-scale
     end
     errorline!(plt, plotattributes, edges[1:end-1], y)
+end
+
+function CairoMakie.Makie.plot!(plt::ErrorScatterHist)
+    v = plt.args[][1]
+    normed = plt.normalization[]
+    weights = plt.weights[]
+    plotattributes = CairoMakie.Makie.shared_attributes(plt, ErrorScatter)
+
+    vs = filter.(isfinite, (reduce(vcat, v),))
+    # edges = Plots._hist_edges(vs, bins)
+    # x = edges[1][1:end-1]
+    # map!(CairoMakie.Makie.pick_hist_edges, plt, [vs, plt.bins[]], :edges)
+    edges = CairoMakie.Makie.pick_hist_edges(vs, plt.bins[])
+    nbins = length(edges) .- 1
+
+    ngroups = length(v)
+
+    ## compute weights (frequencies) by group using those edges
+    y = zeros(nbins, ngroups)
+    for i in 1:ngroups
+        v_i = filter(isfinite, v[i])
+        w_i = weights
+        h_i = my_make_hist((v_i,), edges; normed=normed, weights=w_i)
+        y[:, i] += h_i.weights .+ eps() # for numerical stability when in log-scale
+    end
+    errorscatter!(plt, plotattributes, edges[1:end-1], y)
 end
 
 # using Distributions

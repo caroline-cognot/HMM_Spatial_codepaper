@@ -100,7 +100,7 @@ begin
 	all_values = vcat(obs_lengths, reduce(vcat, sim_distributions))
 	bins = collect(1:maximum(all_values)+5)
 
-	fig_spell = Figure(fontsize = 17)
+	fig_spell = Figure(fontsize = 17,size=(1000,300))
 	ax = Axis(fig_spell[1, 1],
 		xlabel = "Nb of days",
 		ylabel = "Probability",
@@ -108,9 +108,8 @@ begin
 		xticks = 0:5:60)
 
 	# Observations
-	errorlinehist!(ax, [obs_lengths],
+	errorscatterhist!(ax, [obs_lengths],
 		color = :blue,
-		linewidth = 2,
 		normalization = :probability,
 		bins = bins,
 		errortype = :percentile,
@@ -129,7 +128,7 @@ begin
 	secondaryalpha=0.4,
 	centertype=:median)
 
-# Interquartile 25-75
+# Interquartile 5-95
 errorlinehist!(ax, sim_distributions;
 	color=:red,
 	secondarycolor=:red,
