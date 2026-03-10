@@ -234,7 +234,7 @@ Allows for easy control of error type and NaN handling.
 - `centertype::Symbol = :mean` - `:mean` or `:median`
 - `errortype::Symbol = :std` - `:std`, `:sem`, or `:percentile`
 - `percentiles::Vector = [25, 75]` - percentiles to use if errortype === :percentile
-- `secondarycolor = Makie.Inherit(:linecolor, nothing)` - color for secondary elements (sticks/plume lines/ribbons)
+- `secondarycolor = CairoMakie.Makie.Inherit(:linecolor, nothing)` - color for secondary elements (sticks/plume lines/ribbons)
 - `secondaryalpha::Float64 = 0.1` - alpha value of plume/ribbon/sticks
 - `stickwidth::Float64 = 0.01` - width of error sticks (fraction of x-range)
 - `secondarylines::Union{Int, AbstractVector} = 100` - number of plume lines to plot or vector of indices
@@ -260,8 +260,8 @@ begin
 end
 ```
 """
-Makie.@recipe ErrorLine (x, y) begin
-    Makie.documented_attributes(Lines)...
+CairoMakie.Makie.@recipe ErrorLine (x, y) begin
+    CairoMakie.Makie.documented_attributes(Lines)...
     "Error style - :ribbon, :stick, or :plume"
     errorstyle = :ribbon
     "Center type - :mean or :median"
@@ -284,7 +284,7 @@ Makie.@recipe ErrorLine (x, y) begin
     whiskerwidth = 2
 end
 
-function Makie.plot!(plt::ErrorLine)
+function CairoMakie.Makie.plot!(plt::ErrorLine)
     # Get converted arguments
     x = plt.x[]
     y = plt.y[]
@@ -297,7 +297,7 @@ function Makie.plot!(plt::ErrorLine)
 
     secondarylines = plt.secondarylines[]
 
-    valid_attributes = Makie.shared_attributes(plt, Lines)
+    valid_attributes = CairoMakie.Makie.shared_attributes(plt, Lines)
 
     # Check y orientation
     ndims(y) > 2 && error("ndims(y) > 2")
@@ -433,8 +433,8 @@ begin
 end
 ```
 """
-Makie.@recipe ErrorLineHist (x, y) begin
-    Makie.documented_attributes(ErrorLine)...
+CairoMakie.Makie.@recipe ErrorLineHist (x, y) begin
+    CairoMakie.Makie.documented_attributes(ErrorLine)...
 
     """
     Sets the number of bins if set to an integer or the edges of bins if set to
@@ -476,7 +476,7 @@ function my_make_hist(
     weights=nothing,
 ) where {N}
     localvs = _filternans(vs)
-    edges = Makie.pick_hist_edges(localvs, binning)
+    edges = CairoMakie.Makie.pick_hist_edges(localvs, binning)
     h = float(
         isnothing(weights) ?
         StatsBase.fit(StatsBase.Histogram, localvs, (edges,), closed=:left) :
@@ -494,17 +494,17 @@ end
 _hist_norm_mode(mode::Symbol) = mode
 _hist_norm_mode(mode::Bool) = mode ? :pdf : :none
 
-function Makie.plot!(plt::ErrorLineHist)
+function CairoMakie.Makie.plot!(plt::ErrorLineHist)
     v = plt.args[][1]
     normed = plt.normalization[]
     weights = plt.weights[]
-    plotattributes = Makie.shared_attributes(plt, ErrorLine)
+    plotattributes = CairoMakie.Makie.shared_attributes(plt, ErrorLine)
 
     vs = filter.(isfinite, (reduce(vcat, v),))
     # edges = Plots._hist_edges(vs, bins)
     # x = edges[1][1:end-1]
-    # map!(Makie.pick_hist_edges, plt, [vs, plt.bins[]], :edges)
-    edges = Makie.pick_hist_edges(vs, plt.bins[])
+    # map!(CairoMakie.Makie.pick_hist_edges, plt, [vs, plt.bins[]], :edges)
+    edges = CairoMakie.Makie.pick_hist_edges(vs, plt.bins[])
     nbins = length(edges) .- 1
 
     ngroups = length(v)

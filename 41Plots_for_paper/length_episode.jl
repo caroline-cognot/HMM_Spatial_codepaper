@@ -100,9 +100,9 @@ sim_distributions = [pmf_spell(rainysim[i], true) for i in 1:Nb]
 begin
 make_range(y, step=1) = range(extrema(y)..., step=step)
 
-QQ=[0.0005,0.9555]
+QQ=[5,95.55]
     fig_spell = Figure(fontsize=17)
-    wwwww = 220
+    wwwww = 280
     hhhhh = 150
  
         ax = Axis(fig_spell[1,1],
@@ -110,9 +110,10 @@ QQ=[0.0005,0.9555]
             ylabel= "Probability" ,
             xticks=(0:5:55),
             width=wwwww,
-            height=hhhhh)
+            height=hhhhh
+            )
         len_ror_hist = pmf_spell(rainy, true)
-
+        ylims!(ax, 8e-6, 1)
         # Observations 
         errorlinehist!(ax, [len_ror_hist], color=:blue, linewidth=2,
             normalization=:probability, bins=make_range(len_ror_hist),
@@ -124,7 +125,14 @@ QQ=[0.0005,0.9555]
             secondarycolor=:gray,
             color=:red,
             normalization=:probability, bins=sim_range,
-            errortype=:percentile, percentiles=QQ, secondaryalpha=0.2,
+            errortype=:percentile, percentiles=[0.0,100], secondaryalpha=0.2,
+            centertype=:median, alpha=0.6, linewidth=1.5,
+            label=("sim"))
+        errorlinehist!(ax, sim_distributions,
+            secondarycolor=:red,
+            color=:red,
+            normalization=:probability, bins=sim_range,
+            errortype=:percentile, percentiles=[25,75], secondaryalpha=0.2,
             centertype=:median, alpha=0.6, linewidth=1.5,
             label=("sim"))
 
