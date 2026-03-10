@@ -332,7 +332,9 @@ value[select_plot] .= 1
 FR_map_spell = map_with_stations(LON_idx, LAT_idx, value; station_name=string.(STAID), colorbar_label="")
 
 savefigcrop(FR_map_spell, "./plots_paper/map_rien")
+FR_map_spell = map_with_stations(LON_idx, LAT_idx, value; colorbar_label="")
 
+savefigcrop(FR_map_spell, "./plots_paper/map_rien2")
 
 my_distance = Matrix(CSV.read("../00data/transformedECAD_locsdistances.csv", header=false, DataFrame))
 my_locations = hcat(station_50Q.LON_idx, station_50Q.LAT_idx)

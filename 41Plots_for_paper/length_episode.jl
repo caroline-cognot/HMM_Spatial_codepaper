@@ -53,7 +53,7 @@ seuil = 1
 rainy = [(mean(r) .> seuil) for r in eachrow(Robs)]
 
 plot(rainy)
-rainysim = [collect(mean(r) > seuil for r in eachcol(rr)) for rr in eachslice(Rs, dims=3)]
+rainysim = [collect(mean(r) > seuil for r in eachcol(rr)) for rr in eachslice(Rs, dims = 3)]
 rainysim[1]
 
 
@@ -87,7 +87,6 @@ for i in eachindex(ror_info.lengths)
 	end
 end
 
-# ror_info.length gives the length of rain episodes. I want a plot of the distrib of this,also highlighting the very long ones by giving the start date of them. then I also want to plot the distribution in simulation with 5-95 interquartile range of the distribution, stored in Rs.
 
 obs_lengths = ror_info.lengths
 
@@ -98,122 +97,56 @@ size(Robs)
 sim_distributions = [pmf_spell(rainysim[i], true) for i in 1:Nb]
 
 begin
-make_range(y, step=1) = range(extrema(y)..., step=step)
+	all_values = vcat(obs_lengths, reduce(vcat, sim_distributions))
+	bins = collect(1:maximum(all_values)+5)
 
-QQ=[0.0005,0.9555]
-    fig_spell = Figure(fontsize=17)
-    wwwww = 220
-    hhhhh = 150
- 
-        ax = Axis(fig_spell[1,1],
-            xlabel="Nb of days" ,yscale=log10,
-            ylabel= "Probability" ,
-            xticks=(0:5:55),
-            width=wwwww,
-            height=hhhhh)
-        len_ror_hist = pmf_spell(rainy, true)
+	fig_spell = Figure(fontsize = 17)
+	ax = Axis(fig_spell[1, 1],
+		xlabel = "Nb of days",
+		ylabel = "Probability",
+		yscale = log10,
+		xticks = 0:5:60)
 
-        # Observations 
-        errorlinehist!(ax, [len_ror_hist], color=:blue, linewidth=2,
-            normalization=:probability, bins=make_range(len_ror_hist),
-            errortype=:percentile, label="Obs")
+	# Observations
+	errorlinehist!(ax, [obs_lengths],
+		color = :blue,
+		linewidth = 2,
+		normalization = :probability,
+		bins = bins,
+		errortype = :percentile,
+		label = "Obs")
 
-        # HMM-SPA K=my_K
-        sim_range = make_range(reduce(vcat, sim_distributions))
-        errorlinehist!(ax, sim_distributions,
-            secondarycolor=:gray,
-            color=:red,
-            normalization=:probability, bins=sim_range,
-            errortype=:percentile, percentiles=QQ, secondaryalpha=0.2,
-            centertype=:median, alpha=0.6, linewidth=1.5,
-            label=("sim"))
+		
+	# Simulations
+	errorlinehist!(ax, sim_distributions;
+	color=:red,
+	secondarycolor=:grey,
+	label=("Simu q_{0,100}" ),
+	normalization=:probability,
+	bins=bins,
+	errortype=:percentile,
+	percentiles=[0, 100],
+	secondaryalpha=0.4,
+	centertype=:median)
 
-        # ylims!(ax, 9e-4, 1)
-        # xlims!(ax, 0, 55)
-    
-    
+# Interquartile 25-75
+errorlinehist!(ax, sim_distributions;
+	color=:red,
+	secondarycolor=:red,
+	label=( "Simu q_{5,95}" ),
+	normalization=:probability,
+	bins=bins,
+	errortype=:percentile,
+	percentiles=[5, 95],
+	secondaryalpha=0.5,
+	centertype=:median)
 
-    Legend(fig_spell[:, 2],
-        [
-            [LineElement(color=:red), PolyElement(color=:red, alpha=0.2)],
-            MarkerElement(color=:blue, marker=:circle, markersize=8),
-        ],
-        ["Simulations", "Observations"],
-    )
-
+	Legend(
+        fig_spell[:, 2],
+        [PolyElement(color=:grey, alpha=0.5), [PolyElement(color=:red, alpha=0.5),
+        LineElement(color=:red)], LineElement(color=:blue)],
+[L"Simu $q_{0,100}$", L"Simu $q_{5,95}$", "Obs"])
     resize_to_layout!(fig_spell)
-    fig_spell
-end
-
-begin
-    all_values = vcat(obs_lengths, reduce(vcat, sim_distributions))
-bins = collect(1:maximum(all_values))
-
-fig_spell = Figure(fontsize=17)
-ax = Axis(fig_spell[1,1],
-    xlabel="Nb of days",
-    ylabel="Probability",
-    yscale=log10,
-    xticks=0:5:55)
-
-# Observations
-errorlinehist!(ax, [obs_lengths],
-    color=:blue,
-    linewidth=2,
-    normalization=:probability,
-    bins=bins,
-    errortype=:percentile,
-    label="Obs")
-
-# Simulations
-errorlinehist!(ax, sim_distributions,
-    color=:red,
-    alpha=0.6,
-    secondarycolor=:gray,
-    errortype=:percentile,
-    percentiles=[0.05,0.95],
-    centertype=:median,
-    normalization=:probability,
-    bins=bins,
-    linewidth=1.5,
-    label="Sim")
-
-
-fig_spell
-end
-
-
-begin
-    function wet_spell_lengths(mask::Vector{Bool})
-        values, lengths = rle(mask)  # run-length encoding
-        return lengths[values .== true]  # keep only wet spells
-    end 
-    obs_lengths = wet_spell_lengths(rainy)
-    sim_lengths = [wet_spell_lengths(sim) for sim in rainysim]
-    all_lengths = vcat(obs_lengths, reduce(vcat, sim_lengths))
-bins = 1:maximum(all_lengths)
-obs_hist = counts(obs_lengths, bins)
-sim_hists = [counts(sim, bins) for sim in sim_lengths]
-using Statistics
-
-sim_matrix = hcat(sim_hists...)  # each column = one simulation
-median_sim = mapslices(median, sim_matrix; dims=2)[:]
-p5_sim = mapslices(x -> quantile(x, 0.0005), sim_matrix; dims=2)[:]
-p95_sim = mapslices(x -> quantile(x, 0.9555), sim_matrix; dims=2)[:]
-using CairoMakie
-
-fig = Figure()
-ax = Axis(fig[1,1], xlabel="Wet spell length (days)", ylabel="Count", yscale=log10)
-
-
-# Simulations median + envelope
-poly!(ax, vcat(bins, reverse(bins)), vcat(p5_sim, reverse(p95_sim)), color=:red, alpha=0.2)
-lines!(ax, bins, median_sim, color=:red, linewidth=1.5, label="Sim median")
-# Observation
-lines!(ax, bins, obs_hist, color=:blue, linewidth=2, label="Obs")
-
-Legend(fig[1,2], [LineElement(color=:red), LineElement(color=:blue)], ["Sim", "Obs"])
-
-fig
-
+	ylims!(ax, 8e-6, 1)
+	fig_spell
 end
