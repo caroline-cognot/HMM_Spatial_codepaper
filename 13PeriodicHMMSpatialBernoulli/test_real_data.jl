@@ -67,7 +67,6 @@ doss_save = "./13PeriodicHMMSpatialBernoulli/res_real_data/"
 for my_autoregressive_order in 0:1 #do not do 1 again yet.
 
 for QMC_m in [30]
-
         for my_K in 1:5
             for my_degree_of_P in 0:2
                 for R0 in [500]

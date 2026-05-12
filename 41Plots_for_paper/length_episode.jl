@@ -95,7 +95,25 @@ D, N, Nsim = size(Rs)
 size(Robs)
 
 sim_distributions = [pmf_spell(rainysim[i], true) for i in 1:Nb]
+# threshold for "long" episodes
+x_large = 25
 
+long_idx = findall(ror_info.lengths .>= x_large)
+
+long_lengths = ror_info.lengths[long_idx]
+long_dates = start_dates[long_idx]
+
+labels = [@sprintf("%04d", year(d)) for d in long_dates]
+
+# group labels by spell length
+grouped = Dict{Int, Vector{String}}()
+
+for (L, lab) in zip(long_lengths, labels)
+    push!(get!(grouped, L, String[]), lab)
+end
+
+# concatenate labels for same length
+grouped_labels = Dict(k => join(v, ", ") for (k,v) in grouped)
 begin
 	all_values = vcat(obs_lengths, reduce(vcat, sim_distributions))
 	bins = collect(1:maximum(all_values)+5)
@@ -144,8 +162,24 @@ errorlinehist!(ax, sim_distributions;
         fig_spell[:, 2],
         [PolyElement(color=:grey, alpha=0.5), [PolyElement(color=:red, alpha=0.5),
         LineElement(color=:red)], LineElement(color=:blue)],
-[L"Simu $q_{0,100}$", L"Simu $q_{5,95}$", "Obs"])
+[L"Simu $q_{0,100}$", L"Simu $q_{5,95}$", "Obs 1963-2023"])
     resize_to_layout!(fig_spell)
 	ylims!(ax, 8e-6, 1)
+
+	# annotate longest observed spells
+	for (x, lab) in grouped_labels
+
+		text!(
+			ax,
+			x, 0.005;
+			text = lab,
+			rotation = π/4,
+			fontsize = 12,
+			color = :black
+		)
+	
+	end
+
 	fig_spell
 end
+savefigcrop("./plots_paper" * "/wet_spells_meteo" * ".pdf", fig_spell)
