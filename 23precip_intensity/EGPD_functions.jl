@@ -2,9 +2,41 @@
 using Distributions, Random
 using   ExtendedExtremes
 
-import SmoothPeriodicStatsModels: polynomial_trigo 
+# import SmoothPeriodicStatsModels: polynomial_trigo 
+###### importing by hand ie copy pasting.
+"""
+    polynomial_trigo(t, β) -> Number
+
+Trigonometric polynomial of degree `d = (length(β) - 1) ÷ 2` evaluated at `t`, where `t` is
+expressed in **fractions of a period**: `t` and `t + 1` give the same value.
+
+```math
+β₁ + \\sum_{l=1}^{d} β_{2l} \\cos(2π l t) + β_{2l+1} \\sin(2π l t)
+```
+
+A degree-0 `β` gives the constant `β[1]`. `polynomial_trigo(t, β, T)` takes `t` in time
+steps and is `polynomial_trigo(t / T, β)`.
+"""
+function polynomial_trigo(t::Number, β)
+    d = (length(β) - 1) ÷ 2
+    # everything is shifted from 1 from usual notation due to array starting at 1
+    return β[1] + sum(β[2*l] * cos(2π * l * t) + β[2*l+1] * sin(2π * l * t) for l = 1:d; init=zero(t))
+end
+
+function polynomial_trigo(t::AbstractArray{<:Number}, β)
+    d = (length(β) - 1) ÷ 2
+    # everything is shifted from 1 from usual notation due to array starting at 1
+    return β[1] .+ sum(β[2*l] * cos.(2π * l * t) + β[2*l+1] * sin.(2π * l * t) for l = 1:d; init=zero(t))
+end
+
+# Legacy spelling, kept because `polynomial_trigo` is exported. It takes `t` in units of time
+# steps together with the period `T`, and forwards to the normalized form above. No `depwarn`:
+# this is called once per time step inside the likelihoods, where that cost would show.
+polynomial_trigo(t::Number, β, T) = polynomial_trigo(t / T, β)
+polynomial_trigo(t::AbstractArray, β, T) = polynomial_trigo(t ./ T, β)
 
 
+###################
 struct MixedUniformTail{T1<:ContinuousUnivariateDistribution, T2<:ContinuousUnivariateDistribution} <: ContinuousUnivariateDistribution
     p::Float64 # probability of the left part
     uniform_part::T1 #left part

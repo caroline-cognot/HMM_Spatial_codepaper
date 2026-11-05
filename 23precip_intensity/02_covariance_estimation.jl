@@ -2,6 +2,7 @@
 using JLD2
 using CSV
 using DataFrames
+using PeriodicHiddenMarkovModels
 include("EGPD_functions.jl")
 include("EGPD_class.jl")
 include("covariance_functions.jl")
@@ -12,6 +13,7 @@ z_hat = CSV.read("./00data/transformedECAD_zhat.csv", DataFrame, header=false)[:
 N = length(z_hat)
 # z_hat=fill(1,N) #test if setting this to 1 gives same result. as previous no-class periodic estimation.
 # z_hat[z_hat.==4] .=3
+
 K = length(unique(z_hat))
 Robs = Matrix(CSV.read("./00data/transformedECAD_Robs.csv", DataFrame, header=false)[:, :])'
 D = size(Robs, 2)
@@ -67,131 +69,43 @@ end
 phimPdry = quantile.(Normal(), Pdry)
 data = XR
 Mat_h
-# fitted=fit_mple(data,Mat_h,model_type,param0,maxiter=20)
 include("/home/caroline/Gitlab_SWG_Caro/hmmspa/utils/fast_bivariate_cdf.jl")
-# using StatsFuns
-#chatgpt ay - never worked...
-# function fit_mple(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, phimPdry; lower=nothing, upper=nothing, maxiter=100, maxdist=maximum(Mat_h) / 3 * 2, maxtime=10)
+using Base.Threads
 
-#     function pairwise_loglik(data, model_type::Type{<:CovarianceStructure}, param, phimPdry, Mat_h; maxdist=maximum(Mat_h) / 3 * 2, maxtime=10)
-#         D, Nt = size(data)
-
-#         space_mask = Mat_h .<= maxdist
-
-#         # Create a matrix for the observed data values
-
-#         # Precompute covariance matrix
-#         covmodel = model_type(1.0, param...,)
-#         cov_matrixes = [cov_spatiotemporal(covmodel, Mat_h, timediff) for timediff in 0:maxtime] # D x D matrix of covariances (spatial)
-
-#         c11 = cov_matrixes[1][1, 1] # variance
-#         partial_sums = zeros(eltype(cov_matrixes[1]), nthreads())
-
-#         #  for t1 in 1:Nt
-#         #     tid_sum = 0  # local accumulator
-
-#         # for t2 in 1:Nt
-#         #     u = abs(t1 - t2)
-#         #     if u <= maxtime
-#         @threads for u in 0:maxtime
-#             tid_sum = 0  # local accumulator
-#             for t1 in 1:(Nt-u)
-#                 t2 = t1 + u
-#                 for i in 1:D
-#                     for j in 1:D
-#                         if space_mask[i, j] && !(i == j && u == 0)
-#                             # Extract observed values
-#                             z1 = data[i, t1]
-#                             z2 = data[j, t2]
-#                             ρ = cov_matrixes[u+1][i, j] / c11
-#                             ρ = clamp(ρ, -0.9999, 0.9999)  # avoid numerical instability
-
-#                             if !isnan(z1) && !isnan(z2)
-
-#                                 tid_sum += -log(2π) - log(c11) - 0.5 * log(1 - ρ^2) - (1 / (2 * c11 * (1 - ρ^2))) * (z1^2 + z2^2 - 2 * ρ * z1 * z2)
-
-#                             elseif isnan(z1) && !isnan(z2)  #mean we have z1 a 0 and z2 non-zero
-#                                 tid_sum += log(StatsFuns.normcdf((phimPdry[i, t1] - ρ * z2) / (sqrt(1 - ρ^2))))
-
-#                             elseif !isnan(z1) && isnan(z2)  #mean we have z1 a 0 and z2 non-zero
-#                                 tid_sum += log(StatsFuns.normcdf((phimPdry[j, t2] - ρ * z1) / (sqrt(1 - ρ^2))))
-
-#                             else
-#                                 tid_sum += log(norm_cdf_2d_vfast(phimPdry[i, t1], phimPdry[j, t2], ρ))
-#                             end
-#                         end
-
-#                     end
-#                 end
-#             end
-#             # end
-#             partial_sums[threadid()] += tid_sum
-#         end
-#         return sum(partial_sums)
-#     end
-
-#     p = (data, Mat_h, model_type, phimPdry)
-
-#     function optimfunction0(u, p)
-#         y = p[1]
-#         Mat_h = p[2]
-#         model_type = p[3]
-#         phimPdry = p[4]
-#         param = u
-#         llh = -pairwise_loglik(y, model_type, param, phimPdry, Mat_h, maxdist=maxdist, maxtime=maxtime)
-#         return llh
-#     end
-
-#     @show optimfunction0(param0, p)
-#     # @show ForwardDiff.gradient(u -> optimfunction0(u, p), param0)
-
-#     optf = OptimizationFunction(optimfunction0, Optimization.AutoForwardDiff())
-
-#     prob = OptimizationProblem(optf, param0, p; lb=lower, ub=upper)
-#     @time sol = solve(prob, Optim.LBFGS(), maxiters=maxiter)
-#     usol = sol.u
-#     return model_type(1.0, usol...)
-# end
-
-function fit_mple(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, phimPdry; lower=nothing, upper=nothing, maxiter=100)
+function fit_mple_nothreads(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, phimPdry; lower=nothing, upper=nothing, maxiter=100)
     function pairwise_loglik(data, model_type::Type{<:CovarianceStructure}, param, phimPdry, Mat_h; maxdist=maximum(Mat_h) / 3 * 2, maxtime=10)
-        D, Nt = size(data)
-        space_mask = Mat_h .<= maxdist
-        # Precompute covariance matrix 
-        covmodel = model_type(1.0, param...,)
-        cov_matrixes = [cov_spatiotemporal(covmodel, Mat_h, timediff) for timediff in 0:maxtime]
-        c11 = cov_matrixes[1][1, 1] # variance 
-        partial_sums = zeros(eltype(cov_matrixes[1]), nthreads())
-        @threads for t1 in 1:Nt
-            tid_sum = 0 # local accumulator
-            for t2 in 1:Nt
-                u = abs(t1 - t2)
-                if u <= maxtime
-                    for i in 1:D
-                        for j in 1:D
-                            if space_mask[i, j] && !(i == j && u == 0) # Extract observed values 
-                                z1 = data[i, t1]
-                                z2 = data[j, t2]
-                                ρ = cov_matrixes[u+1][i, j] / c11
-                                ρ = clamp(ρ, -0.9999, 0.9999) # avoid numerical instability 
-                                if !isnan(z1) && !isnan(z2)
-                                    tid_sum += -log(2π) - log(c11) - 0.5 * log(1 - ρ^2) - (1 / (2 * c11 * (1 - ρ^2))) * (z1^2 + z2^2 - 2 * ρ * z1 * z2)
-                                elseif isnan(z1) && !isnan(z2) #mean we have z1 a 0 and z2 non-zero 
-                                    tid_sum += log(cdf(Normal(), (phimPdry[i, t1] - ρ * z2) / (sqrt(1 - ρ^2))))
-                                elseif !isnan(z1) && isnan(z2) #mean we have z1 a 0 and z2 non-zero 
-                                    tid_sum += log(cdf(Normal(), (phimPdry[j, t2] - ρ * z1) / (sqrt(1 - ρ^2))))
-                                else
-                                    tid_sum += log(norm_cdf_2d_vfast(phimPdry[i, t1], phimPdry[j, t2], ρ))
-                                end
-                            end
-                        end
+    D, Nt = size(data)
+    space_mask = Mat_h .<= maxdist
+    covmodel = model_type(1.0, param...)
+    cov_matrixes = [cov_spatiotemporal(covmodel, Mat_h, timediff) for timediff in 0:maxtime]
+    
+    total = 0.0
+    for t1 in 1:Nt
+        for t2 in 1:Nt
+            u = abs(t1 - t2)
+            u > maxtime && continue
+            for i in 1:D
+                for j in 1:D
+                    (!space_mask[i, j] || (i == j && u == 0)) && continue
+                    z1 = data[i, t1]
+                    z2 = data[j, t2]
+                    ρ = clamp(cov_matrixes[u+1][i, j], -0.9999, 0.9999)
+                    if !isnan(z1) && !isnan(z2)
+                        cst = 1 - cdf(Normal(), phimPdry[i,t1]) - cdf(Normal(), phimPdry[j,t2]) + norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                        total += -log(2π) - 0.5*log(1-ρ^2) - (z1^2 + z2^2 - 2ρ*z1*z2)/(2*(1-ρ^2)) - log(clamp(cst, 1e-10, 0.9999))
+                    elseif isnan(z1) && !isnan(z2)
+                        cst = cdf(Normal(), phimPdry[i,t1]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                        total += log(cdf(Normal(), (phimPdry[i,t1] - ρ*z2)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
+                    elseif !isnan(z1) && isnan(z2)
+                        cst = cdf(Normal(), phimPdry[j,t2]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                        total += log(cdf(Normal(), (phimPdry[j,t2] - ρ*z1)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
                     end
                 end
             end
-            partial_sums[threadid()] += tid_sum
         end
-        return sum(partial_sums)
     end
+    return total
+end
     p = (data, Mat_h, model_type, phimPdry)
     function optimfunction0(u, p)
         y = p[1]
@@ -211,29 +125,78 @@ function fit_mple(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, 
     return model_type(1.0, usol...)
 end
 
-# param0 = [1000. 3.]
-# fitted = fit_mple(data, Mat_h, ExpExp, param0, phimPdry, maxiter=20)
-# # start from restarted computer - on sector;
-# # 2 iter : 135.908599 seconds (2.50 M allocations: 144.182 MiB, 0.03% gc time, 3.51% compilation time)
-# # ExpExp{Float64, Float64}(1.0, 999.9704311523624, 0.5956409205963817)
-# #20 iter :  388.885219 seconds (22.28 k allocations: 43.094 MiB, 0.01% gc time)
-#     #    ExpExp{Float64, Float64}(1.0, 267.14150731860417, 0.6014886137593465)
+function fit_mple(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, phimPdry; lower=nothing, upper=nothing, maxiter=100)
+    function pairwise_loglik(data, model_type::Type{<:CovarianceStructure}, param, phimPdry, Mat_h; maxdist=maximum(Mat_h) / 3 * 2, maxtime=10)
+        D, Nt = size(data)
+        space_mask = Mat_h .<= maxdist
+        covmodel = model_type(1.0, param...)
+        cov_matrixes = [cov_spatiotemporal(covmodel, Mat_h, timediff) for timediff in 0:maxtime]
+        # partial_sums = zeros(eltype(cov_matrixes[1]), nthreads())
+        partial_sums = zeros(eltype(cov_matrixes[1]), nthreads(:default) + nthreads(:interactive))
+        @threads :static for t1 in 1:Nt
+            tid_sum = zero(eltype(cov_matrixes[1]))
+            for t2 in 1:Nt
+                u = abs(t1 - t2)
+                if u <= maxtime
+                    for i in 1:D
+                        for j in 1:D
+                            if space_mask[i, j] && !(i == j && u == 0)
+                                z1 = data[i, t1]
+                                z2 = data[j, t2]
+                                ρ = clamp(cov_matrixes[u+1][i, j], -0.9999, 0.9999)
+                                if !isnan(z1) && !isnan(z2)
+                                    cst = 1 - cdf(Normal(), phimPdry[i,t1]) - cdf(Normal(), phimPdry[j,t2]) + norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                                    tid_sum += -log(2π) - 0.5*log(1-ρ^2) - (z1^2 + z2^2 - 2ρ*z1*z2)/(2*(1-ρ^2)) - log(clamp(cst, 1e-10, 0.9999))
+                                elseif isnan(z1) && !isnan(z2)
+                                    cst = cdf(Normal(), phimPdry[i,t1]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                                    tid_sum += log(cdf(Normal(), (phimPdry[i,t1] - ρ*z2)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
+                                elseif !isnan(z1) && isnan(z2)
+                                    cst = cdf(Normal(), phimPdry[j,t2]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                                    tid_sum += log(cdf(Normal(), (phimPdry[j,t2] - ρ*z1)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            partial_sums[threadid()] += tid_sum
+        end
+        return sum(partial_sums)
+    end
 
-# param0 = [250. 0.5]
-# fitted = fit_mple(data, Mat_h, ExpExp, param0, phimPdry, maxiter=20)
-# # 185.621960 seconds (9.95 k allocations: 20.786 MiB, 0.01% gc time)
-# # ExpExp{Float64, Float64}(1.0, 267.14150731860417, 0.6014886137593465)
-# jldsave("23precip_intensity/res_real_data/ExpExpcov_withmarginalsdeg" * string(degree_of_P) * ".jld2"; fitted=fitted)
+    p = (data, Mat_h, model_type, phimPdry)
+    function optimfunction0(u, p)
+        llh = -pairwise_loglik(p[1], p[3], u, p[4], p[2])
+        return llh
+    end
+
+    @show optimfunction0(param0, p)
+    @show ForwardDiff.gradient(u -> optimfunction0(u, p), param0)
+    optf = OptimizationFunction(optimfunction0, Optimization.AutoForwardDiff())
+    prob = OptimizationProblem(optf, param0, p; lb=lower, ub=upper)
+    @time sol = solve(prob, Optim.LBFGS(), maxiters=maxiter)
+    return model_type(1.0, sol.u...)
+end
+
+param0 = [250. 3.]
+fitted = fit_mple(data, Mat_h, ExpExp, param0, phimPdry, maxiter=20)
+
+# took a while but i also closed the computer at some point;
+# 1066.181343 seconds (1.99 M allocations: 180.534 MiB, 0.00% gc time, 0.10% compilation time)
+# ExpExp{Float64, Float64}(1.0, 280.2402620839839, 0.6647444627840139)
+
+jldsave("23precip_intensity/res_real_data/ExpExpcov_withmarginalsdeg" * string(degree_of_P) * ".jld2"; fitted=fitted)
 
 
 
 
 
 
-param0=[ 300.0, 1/3,  1.0, 0.5, 0.1, 0.5]
+param0=[ 280.0, 2/3,  1.0, 0.5, 0.1, 0.5]
 fitted=fit_mple(data,Mat_h,GneitingMatern,param0,phimPdry,lower=[200., 0.1 ,0. ,0. ,0.00, 0.1],upper= [1000. ,10., 1., 1., 10., 10.],maxiter=100)
 # 100 iter : 6279.295689 seconds (35.85 M allocations: 3.355 GiB, 0.01% gc time, 0.26% compilation time: <1% of which was recompilation)
 
-# GneitingMatern{Float64, Float64}(1.0, 274.5487918568977, 0.46817484026433887, 0.9999999999999125, 0.7438575419048332, 0.42334214393444314, 0.4759128763382056)
+# 100 iter : 3780.496105 seconds (24.23 M allocations: 2.086 GiB, 0.01% gc time, 0.08% compilation time)
+# GneitingMatern{Float64, Float64}(1.0, 305.2396076771512, 0.6097296932197163, 0.9994210930169677, 0.755855842863924, 0.5928448637557749, 0.4482260014469662)
 
 jldsave("23precip_intensity/res_real_data/GMcov_withmarginalsdeg" * string(degree_of_P) * ".jld2"; fitted=fitted)

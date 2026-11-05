@@ -90,7 +90,7 @@ function make_square(λs, ρs, fields, xg, yg)
     axs = [Axis(fig[j, i], width=120, height=120, limits=(0, 2, 0, 2)) for (j, λ) in enumerate(λs), (i, ρ) in enumerate(ρs)]
     for (j, λ) in enumerate(λs)
         for (i, ρ) in enumerate(ρs)
-            heatmap!(axs[j, i], xg, yg, fields[j, i], colormap=:binary, colorrange=(0, 1))
+            Makie.heatmap!(axs[j, i], xg, yg, fields[j, i], colormap=:binary, colorrange=(0, 1))
             if j < length(λs)
                 hidexdecorations!(axs[j, i])
             end
@@ -496,13 +496,13 @@ pretty_table(ICLmat; header=col_labels,backend = Val(:latex))
 #############################################################################
 idx_days = [findall(x -> dayofyear_Leap.(x) == m, every_year) for m in 1:366]
 
-daily_rain_histo = [monthly_agg(Robs[j, :], idx_days) for j in 1:D]
-daily_rain_prob = [monthly_agg((Robs[j, :] .> 0), idx_days) .* 1.0 for j in 1:D]
-for j in 1:D
-    for i in 1:366
-        daily_rain_prob[j][i] = daily_rain_prob[j][i] / length(idx_days[i])
-    end
-end
+daily_rain_histo = [monthly_agg(Robs[j, :], idx_days, mean) for j in 1:D]
+daily_rain_prob = [monthly_agg((Robs[j, :] .> 0), idx_days,mean) .* 1.0 for j in 1:D]
+# for j in 1:D
+#     for i in 1:366
+#         daily_rain_prob[j][i] = daily_rain_prob[j][i] / length(idx_days[i])
+#     end
+# end
 
 # daily_rain_prob[1]
 # @time "Plot daily mean" begin
@@ -538,7 +538,7 @@ end
 # end
 # savefigcrop("plots_paper/raincharac.pdf", fig_month_RR)
 
-@time "Plot daily mean and rain probability" begin
+@time "*Plot daily mean and rain probability" begin
     fig_month_RR = Figure(fontsize=19)
 
     for (idx, j) in enumerate(select_plot[[1, 5, 2, 6, 4, 3]])
@@ -579,7 +579,7 @@ end
         lines!(ax2, 1:366, prob_rain; color=mycolors[4], linewidth=1.5, label="Rain prob.")
 
         linkxaxes!(ax, ax2)
-        ylims!(ax, 0, 400 * (1 + 0.05))
+        ylims!(ax, 0,10 * (1 + 0.05))
         ylims!(ax2, 0, 1.05)
     end
 
@@ -1987,6 +1987,8 @@ end
 savefigcrop("./plots_paper/RER_1mm.pdf", fig_ROR1mm)
 
 begin
+            perc = 0.1
+
     fig_spell_1mm = Figure(fontsize=17)
     wwwww = 220
     hhhhh = 150
@@ -1999,7 +2001,6 @@ begin
             xticks=(0:3:15),
             width=wwwww,
             height=hhhhh)
-        perc = 0.1
         len_ror_hist = pmf_spell(RORo1mm[idx_seasons[m]] .≤ perc, 1)
         len_ror_simu = [pmf_spell(RORs1mm[i][idx_seasons[m]] .≤ perc, 1) for i in 1:Nb]
 
@@ -2036,6 +2037,7 @@ begin
 
     resize_to_layout!(fig_spell_1mm)
     fig_spell_1mm
+    savefigcrop("./plots_paper" * "/dry_spells_ROR1mm" * string(perc) * "_K" * string(my_K) * "_resu_" * string(length(n2t)) * "days" * "_degree" * string(my_degree_of_P) * "_maxiter" * string(maxiter) * "_m" * string(my_autoregressive_order) * "_R0" * string(R0) * "_QMCm" * string(QMC_m) * ".pdf", fig_spell_1mm)
+
 end
 
-savefigcrop("./plots_paper" * "/dry_spells_ROR1mm" * string(perc) * "_K" * string(my_K) * "_resu_" * string(length(n2t)) * "days" * "_degree" * string(my_degree_of_P) * "_maxiter" * string(maxiter) * "_m" * string(my_autoregressive_order) * "_R0" * string(R0) * "_QMCm" * string(QMC_m) * ".pdf", fig_spell_1mm)
