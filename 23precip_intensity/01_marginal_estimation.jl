@@ -1,5 +1,5 @@
 # Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
-skip_estim_marginals = true
+skip_estim_marginals = false
 skip_plots_marginals = false
 skip_normalization =true
 skip_resu_marginals = true
@@ -76,10 +76,10 @@ D=size(y,1)
     param_xiinit = repeat(reshape(param_xi1, 1, D, 2 * degree_of_P+1), K, 1, 1)
 
     di, param_kappa, param_sigma, param_xi, param_proba_lowrain = fit_dists(y, param_kappainit,param_sigmainit, param_xiinit, Array{AbstractFloat}(undef,K, D, 2 * degree_of_P + 1), left_bound, middle_bound, T, z_hat,n2t,maxiters=10000)
-    jldsave("./23precip_intensity/res_real_data/periodicEGPD_K"*string(K)*string(degree_of_P)*".jld2"; di=di)
+    jldsave("./23precip_intensity/res_real_data/full_periodicEGPD_K"*string(K)*string(degree_of_P)*".jld2"; di=di,param_xi=param_xi,param_sigma=param_sigma,param_kappa=param_kappa,param_proba_lowrain=param_proba_lowrain)
 end
 
-@load "./23precip_intensity/res_real_data/periodicEGPD_K"*string(K)*string(degree_of_P)*".jld2" di
+@load "./23precip_intensity/res_real_data/full_periodicEGPD_K"*string(K)*string(degree_of_P)*".jld2" di
 
 if !skip_plots_marginals
     # plot the parameters

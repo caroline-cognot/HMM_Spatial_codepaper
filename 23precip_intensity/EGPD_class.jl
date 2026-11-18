@@ -167,7 +167,7 @@ end
         param_xiinit = param_xi[k,s, :]
         param_kappainit = param_kappa[k,s, :]
 
-        fitted, param_kappas, param_sigmas, param_xis = fit_EGPD_periodic(ytail_s, indicetail_s, param_kappainit, param_sigmainit, param_xiinit,maxiters=maxiters)
+        fitted, param_kappas, param_sigmas, param_xis = fit_EGPD_periodic(ytail_s, indicetail_s, param_kappainit, param_sigmainit, param_xiinit,T,maxiters=maxiters)
 
         param_kappa[k,s, :] .= param_kappas
         param_sigma[k,s, :] .= param_sigmas

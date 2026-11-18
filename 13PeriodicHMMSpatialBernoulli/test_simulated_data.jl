@@ -1,7 +1,7 @@
 # Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
-using Pkg
-Pkg.activate("HMMSPAcodepaper")
-Pkg.instantiate()
+cd(@__DIR__)
+
+
 
 begin
     include("../13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
@@ -14,6 +14,7 @@ begin
     # ## Optimization
     using JuMP, Ipopt
     using Optimization, OptimizationMOI
+    using OptimizationOptimJL
     using LsqFit
     using Dates
     using LaTeXStrings
@@ -22,6 +23,7 @@ begin
     using CSV
     using DataFrames
     include("../13PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
+    using Optim
 end
 # test --------------------------------------#
 import Distributions.Categorical
@@ -39,8 +41,8 @@ n2t = n_to_t(my_N, my_T)
 
 
 
-my_distance = Matrix(CSV.read("./00data/transformedECAD_locsdistances.csv", DataFrame, header=false))
-my_locations = Matrix(CSV.read("./00data/transformedECAD_locs.csv", DataFrame, header=false))
+my_distance = Matrix(CSV.read("../00data/transformedECAD_locsdistances.csv", DataFrame, header=false))
+my_locations = Matrix(CSV.read("../00data/transformedECAD_locs.csv", DataFrame, header=false))
 
 my_D = length(my_locations[:, 1])
 my_index = sample(1:my_D, my_D, replace=false)
@@ -49,7 +51,7 @@ my_distance = my_distance[my_index, my_index]
 my_locations = my_locations[my_index, :]
 my_D = length(my_index)
 
-p = Plots.scatter(my_locations[:, 1], my_locations[:, 2]);
+# p = Plots.scatter(my_locations[:, 1], my_locations[:, 2]);
 
 # choose real set of parameters
 
@@ -131,8 +133,11 @@ println("Before estimation: ", thetaR)
 #     end
 # end
 # with usual weights
+using Optim, LineSearches
+
+solver = Optim.LBFGS(linesearch = BackTracking())  
 @time begin
-    history2, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmm, thetaA, thetaB, thetaR, Y, Y_past; n2t=n2t, maxiter=50, tol=tol, maxiters_R=100, display=:iter, tdist=tdist, QMC_m=30)
+    history2, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmm, thetaA, thetaB, thetaR, Y, Y_past; n2t=n2t, maxiter=50, tol=tol, maxiters_R=100, solver=solver,display=:iter, tdist=tdist, QMC_m=30)
 end
 pp1 = Plots.plot(history2["logtots"])
 
@@ -144,6 +149,7 @@ pp1 = Plots.plot(history2["logtots"])
 month_days = repeat(1:my_T, 50)
 
 include("../utils/maps.jl")
+
 include("../utils/seasons_and_other_dates.jl")
 
 
@@ -154,7 +160,6 @@ using Statistics
 # --- Utilities ---
 rmse(x, y) = sqrt(mean((x .- y) .^ 2))
 
-# function to get the last fitted thetas from your optimization history
 function extract_last_theta(last_iter_array)
     # If stored as vector of arrays, take last:
     return last_iter_array[end]
@@ -254,7 +259,7 @@ resize_to_layout!(fig_Bcompare)
 fig_Bcompare
 
 # savefigcrop
-savefigcrop(fig_Bcompare, "./13PeriodicHMMSpatialBernoulli/res_sim_data/B_true_start_fitted_compare")
+savefigcrop(fig_Bcompare, "../13PeriodicHMMSpatialBernoulli/res_sim_data/B_true_start_fitted_compare")
 
 begin
     fig_R = Figure()
@@ -297,7 +302,7 @@ begin
 
     fig_R
 end
-savefigcrop(fig_R, "./13PeriodicHMMSpatialBernoulli/res_sim_data/Compare_R_true_start_fitted")
+savefigcrop(fig_R, "../13PeriodicHMMSpatialBernoulli/res_sim_data/Compare_R_true_start_fitted")
 
 begin
     fig_Q = Figure()
@@ -358,7 +363,7 @@ begin
     resize_to_layout!(fig_Q)
     fig_Q
 end
-savefigcrop(fig_Q, "./13PeriodicHMMSpatialBernoulli/res_sim_data/Compare_Q_true_start_fitted")
+savefigcrop(fig_Q, "../13PeriodicHMMSpatialBernoulli/res_sim_data/Compare_Q_true_start_fitted")
 
 #################### m=1 ################"
 
@@ -445,10 +450,12 @@ Y_past = rand(Bool, my_autoregressive_order, D)
 
 println("Before estimation: ", thetaR)
 
+using Optim, LineSearches
 
+solver = Optim.LBFGS(linesearch = BackTracking())  
 # with usual weights
 @time begin
-    history2, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmm, thetaA, thetaB, thetaR, Y, Y_past; n2t=n2t, maxiter=50, tol=tol, maxiters_R=100, display=:iter, tdist=tdist, QMC_m=30)
+    history2, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmm, thetaA, thetaB, thetaR, Y, Y_past; solver=solver,n2t=n2t, maxiter=50, tol=tol, maxiters_R=100, display=:iter, tdist=tdist, QMC_m=30)
 end
 pp1 = Plots.plot(history2["logtots"])
 

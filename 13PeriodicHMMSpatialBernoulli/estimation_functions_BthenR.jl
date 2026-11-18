@@ -441,7 +441,7 @@ function fit_mle!(
     n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer},
     display=:iter,
     maxiter=100,
-    tol=1e-3,
+    tol=1e-3,solver=Optim.LBFGS(),
     robust=false,
     silence=true,
     warm_start=true,
@@ -591,9 +591,9 @@ function fit_mle!(
         println("done updating B")
 
         if size_order == 1
-            update_R!(hmm, thetaR, γ, wp, Y, Situations; n2t=n2t, maxiters=maxiters_R)
+            update_R!(hmm, thetaR, γ, wp, Y, Situations; solver=solver,n2t=n2t, maxiters=maxiters_R)
         elseif size_order == 2
-            update_R_memory1!(hmm, thetaR, γ, wp, Y, Situations; n2t=n2t, maxiters=maxiters_R)
+            update_R_memory1!(hmm, thetaR, γ, wp, Y, Situations;solver = solver, n2t=n2t, maxiters=maxiters_R)
         end
         println("done updating R")
 
@@ -715,7 +715,7 @@ end
 
 
 
-function fit_mle_one_R!(theta_R, B, h, Y::AbstractArray{<:Real}, wp::AbstractMatrix{<:Real}, n_pair::AbstractArray{<:Real}; n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer}, solver=Optimization.LBFGS(), return_sol=false, solkwargs...)
+function fit_mle_one_R!(theta_R, B, h, Y::AbstractArray{<:Real}, wp::AbstractMatrix{<:Real}, n_pair::AbstractArray{<:Real}; solver=Optim.LBFGS(), n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer}, return_sol=false, solkwargs...)
     T = size(B, 1)
     # println("size(B,1) = T ? =",T)
     # println("inside updateR! - inside fit - before estim: ", theta_R)
@@ -745,6 +745,7 @@ function fit_mle_one_R!(theta_R, B, h, Y::AbstractArray{<:Real}, wp::AbstractMat
     # Solve the problem
     sol = solve(prob, solver; solkwargs...)
 
+
     # Check solution status
     if !SciMLBase.successful_retcode(sol.retcode)
         @warn "sol.retcode = $(sol.retcode)"
@@ -759,7 +760,7 @@ end
 
 function update_R!(hmm::PeriodicHMMSpaMemory,
     Range_θ::AbstractArray{N,2} where {N},
-    γ::AbstractMatrix, wp, Y, Situations::AbstractArray{<:Real}; n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer}, maxiters=10)
+    γ::AbstractMatrix, wp, Y, Situations::AbstractArray{<:Real}; solver=Optim.LBFGS(), n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer}, maxiters=10)
     @argcheck size(γ, 1) == size(Y, 1)
     N = size(γ, 1)
     R = hmm.R
@@ -796,7 +797,7 @@ function update_R!(hmm::PeriodicHMMSpaMemory,
         # println("weight pairs ok")
         # Fix: Use `view` to pass mutable references
         # @show (Range_θ[ k, :])
-        fit_mle_one_R!(view(Range_θ, k, :), B, h, Y, wp, n_pair; n2t=n2t, maxiters=maxiters)
+        fit_mle_one_R!(view(Range_θ, k, :), B, h, Y, wp, n_pair; solver=solver, n2t=n2t, maxiters=maxiters)
         # @show (Range_θ[ k, :])
     end
     # println("inside updateR! - after fit: ", Range_θ)
@@ -882,7 +883,7 @@ end
 
 
 
-function fit_mle_one_R_memory1!(theta_R, B, h, Y::AbstractArray{<:Real}, wp::AbstractMatrix{<:Real}, n_pair::AbstractArray{<:Real}; n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer}, solver=Optimization.LBFGS(), return_sol=false, solkwargs...)
+function fit_mle_one_R_memory1!(theta_R, B, h, Y::AbstractArray{<:Real}, wp::AbstractMatrix{<:Real}, n_pair::AbstractArray{<:Real};solver=Optim.LBFGS(), n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer}, return_sol=false, solkwargs...)
     T = size(B, 1)
     # println("size(B,1) = T ? =",T)
     # println("inside updateR! - inside fit - before estim: ", theta_R)
@@ -926,7 +927,7 @@ end
 
 function update_R_memory1!(hmm::PeriodicHMMSpaMemory,
     Range_θ::AbstractArray{N,2} where {N},
-    γ::AbstractMatrix, wp, Y, Situations::AbstractArray{<:Real}; n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer}, maxiters=10)
+    γ::AbstractMatrix, wp, Y, Situations::AbstractArray{<:Real};solver=Optim.LBFGS(), n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer}, maxiters=10)
     @argcheck size(γ, 1) == size(Y, 1)
     N = size(γ, 1)
     R = hmm.R
@@ -961,7 +962,7 @@ function update_R_memory1!(hmm::PeriodicHMMSpaMemory,
 
         # Fix: Use `view` to pass mutable references
         # @show (Range_θ[ k, :])
-        fit_mle_one_R_memory1!(view(Range_θ, k, :), B, h, Y, wp, n_pair; n2t=n2t, maxiters=maxiters)
+        fit_mle_one_R_memory1!(view(Range_θ, k, :), B, h, Y, wp, n_pair;solver=solver , n2t=n2t, maxiters=maxiters)
         # @show (Range_θ[ k, :])
     end
     # println("inside updateR! - after fit: ", Range_θ)

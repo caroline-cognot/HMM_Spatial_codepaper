@@ -1,7 +1,7 @@
 # Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
-using Pkg
-Pkg.activate("HMMSPAcodepaper")
-Pkg.instantiate()
+cd(@__DIR__)
+
+
 
 begin
     include("../13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
@@ -63,6 +63,10 @@ my_T = 366 # Period
 
 Threads.nthreads()
 doss_save = "./13PeriodicHMMSpatialBernoulli/res_real_data/"
+
+using Optim, LineSearches
+
+solver = Optim.LBFGS(linesearch = BackTracking())  
 
 for my_autoregressive_order in 0:1 #do not do 1 again yet.
 
@@ -126,7 +130,7 @@ for QMC_m in [30]
                             plot(p1, p2, p3, layout=@layout [a b; c]; size=(1000, 1000))
 
 
-                            @time history, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmm, thetaA, thetaB, thetaR, Y, Y_past; n2t=n2t, maxiter=maxiter, tol=1e-3, maxiters_R=100, display=:iter, tdist=tdist, QMC_m=QMC_m)
+                            @time history, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmm, thetaA, thetaB, thetaR, Y, Y_past; solver=solver,n2t=n2t, maxiter=maxiter, tol=1e-3, maxiters_R=100, display=:iter, tdist=tdist, QMC_m=QMC_m)
                             pp1 = plot(history["logtots"])
                             savefig(pp1, doss_save * "logtots/K" * string(my_K) * "_t" * string(tdist) * "_degree" * string(my_degree_of_P) * "_maxiter" * string(maxiter) * "_m" * string(my_autoregressive_order) * "_R0" * string(R0) * "_QMCm" * string(QMC_m) * "logtots.png")
                             save(doss_save * "/parameters/K" * string(my_K) * "_resu_" * string(length(n2t)) * "days" * "_degree" * string(my_degree_of_P) * "_maxiter" * string(maxiter) * "_m" * string(my_autoregressive_order) * "_R0" * string(R0) * "_QMCm" * string(QMC_m) * ".jld2", Dict("hmm" => hmm, "logtots" => history["logtots"], "all_thetaA_iterations" => all_thetaA_iterations, "all_thetaB_iterations" => all_thetaB_iterations, "all_thetaR_iterations" => all_thetaR_iterations))

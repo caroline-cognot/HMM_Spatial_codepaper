@@ -272,7 +272,7 @@ end
 
 
 
-function fit_EGPD_periodic(ytail_s, indicetail_s,param_kappas, param_sigmas, param_xis, ;maxiters=500)
+function fit_EGPD_periodic(ytail_s, indicetail_s,param_kappas, param_sigmas, param_xis,T ;maxiters=500)
     # give initial parameters
     param = [param_kappas; param_sigmas; param_xis]
     degp = Int((length(param_kappas) - 1) / 2)
@@ -348,6 +348,7 @@ function fit_dists(y::AbstractArray{<:AbstractFloat,2},
     param_kappa::AbstractArray{<:AbstractFloat,2},param_sigma::AbstractArray{<:AbstractFloat,2}, param_xi::AbstractArray{<:AbstractFloat,2},  param_proba_lowrain::AbstractArray{<:AbstractFloat,2}, left_bound::AbstractFloat, middle_bound::AbstractFloat, T, n2t::AbstractVector{<:Integer};maxiters=1000)
     # have to estimate for each location s dists[:,s]
     # dists[t,s] is the distribution for each time step
+    D = size(y, 1)
     deg = Int((size(param_sigma, 2) - 1) / 2)
     n_in_t = [findall(n2t .== t) for t = 1:T]
 
@@ -393,7 +394,7 @@ function fit_dists(y::AbstractArray{<:AbstractFloat,2},
         param_xiinit = param_xi[s, :]
         param_kappainit = param_kappa[s, :]
 
-        fitted, param_kappas, param_sigmas, param_xis = fit_EGPD_periodic(ytail_s, indicetail_s,  param_kappainit,param_sigmainit, param_xiinit,maxiters=maxiters)
+        fitted, param_kappas, param_sigmas, param_xis = fit_EGPD_periodic(ytail_s, indicetail_s,  param_kappainit,param_sigmainit, param_xiinit,T,maxiters=maxiters)
 
         param_kappa[s, :] .= param_kappas
         param_sigma[s, :] .= param_sigmas

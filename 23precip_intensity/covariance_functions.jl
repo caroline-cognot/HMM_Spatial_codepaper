@@ -169,7 +169,7 @@ function GaussianField(coords, model)
     for j in 1:D
         for i in (j+1):D
 
-            Mat_h[i, j] = Mat_h[j, i] = haversine(coordll[i, :], coordll[j, :]) / 1000
+            Mat_h[i, j] = Mat_h[j, i] = Distances.haversine(coordll[i, :], coordll[j, :]) / 1000
         end
     end
     return GaussianField(coords, model, Mat_h)
@@ -580,4 +580,191 @@ function plotCR_obs_vs_sim(Robs, Rsim, locsdata; threshold=1.5,dmax=300)
         end
     end
     return p
+end
+function fit_mple_nothreads(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, phimPdry; lower=nothing, upper=nothing, maxiter=100)
+    function pairwise_loglik(data, model_type::Type{<:CovarianceStructure}, param, phimPdry, Mat_h; maxdist=maximum(Mat_h) / 3 * 2, maxtime=10)
+    D, Nt = size(data)
+    space_mask = Mat_h .<= maxdist
+    covmodel = model_type(1.0, param...)
+    cov_matrixes = [cov_spatiotemporal(covmodel, Mat_h, timediff) for timediff in 0:maxtime]
+    
+    total = 0.0
+    for t1 in 1:Nt
+        for t2 in 1:Nt
+            u = abs(t1 - t2)
+            u > maxtime && continue
+            for i in 1:D
+                for j in 1:D
+                    (!space_mask[i, j] || (i == j && u == 0)) && continue
+                    z1 = data[i, t1]
+                    z2 = data[j, t2]
+                    ρ = clamp(cov_matrixes[u+1][i, j], -0.9999, 0.9999)
+                    if !isnan(z1) && !isnan(z2)
+                        cst = 1 - cdf(Normal(), phimPdry[i,t1]) - cdf(Normal(), phimPdry[j,t2]) + norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                        total += -log(2π) - 0.5*log(1-ρ^2) - (z1^2 + z2^2 - 2ρ*z1*z2)/(2*(1-ρ^2)) - log(clamp(cst, 1e-10, 0.9999))
+                    elseif isnan(z1) && !isnan(z2)
+                        cst = cdf(Normal(), phimPdry[i,t1]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                        total += log(cdf(Normal(), (phimPdry[i,t1] - ρ*z2)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
+                    elseif !isnan(z1) && isnan(z2)
+                        cst = cdf(Normal(), phimPdry[j,t2]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                        total += log(cdf(Normal(), (phimPdry[j,t2] - ρ*z1)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
+                    end
+                end
+            end
+        end
+    end
+    return total
+end
+    p = (data, Mat_h, model_type, phimPdry)
+    function optimfunction0(u, p)
+        y = p[1]
+        Mat_h = p[2]
+        model_type = p[3]
+        phimPdry = p[4]
+        param = u
+        llh = -pairwise_loglik(y, model_type, param, phimPdry, Mat_h)
+        return llh
+    end
+    @show optimfunction0(param0, p)
+    @show ForwardDiff.gradient(u -> optimfunction0(u, p), param0)
+    optf = OptimizationFunction(optimfunction0, Optimization.AutoForwardDiff())
+    prob = OptimizationProblem(optf, param0, p; lb=lower, ub=upper)
+    @time sol = solve(prob, Optim.LBFGS(), maxiters=maxiter) #exp exp model for N = 1000 samples of D=37 stations, takes 12s. 
+    usol = sol.u
+    return model_type(1.0, usol...)
+end
+
+function fit_mple(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, phimPdry; lower=nothing, upper=nothing, maxiter=100)
+    function pairwise_loglik(data, model_type::Type{<:CovarianceStructure}, param, phimPdry, Mat_h; maxdist=maximum(Mat_h) / 3 * 2, maxtime=10)
+        D, Nt = size(data)
+        space_mask = Mat_h .<= maxdist
+        covmodel = model_type(1.0, param...)
+        cov_matrixes = [cov_spatiotemporal(covmodel, Mat_h, timediff) for timediff in 0:maxtime]
+        # partial_sums = zeros(eltype(cov_matrixes[1]), nthreads())
+        partial_sums = zeros(eltype(cov_matrixes[1]), nthreads(:default) + nthreads(:interactive))
+        @threads :static for t1 in 1:Nt
+            tid_sum = zero(eltype(cov_matrixes[1]))
+            for t2 in 1:Nt
+                u = abs(t1 - t2)
+                if u <= maxtime
+                    for i in 1:D
+                        for j in 1:D
+                            if space_mask[i, j] && !(i == j && u == 0)
+                                z1 = data[i, t1]
+                                z2 = data[j, t2]
+                                ρ = clamp(cov_matrixes[u+1][i, j], -0.9999, 0.9999)
+                                if !isnan(z1) && !isnan(z2)
+                                    cst = 1 - cdf(Normal(), phimPdry[i,t1]) - cdf(Normal(), phimPdry[j,t2]) + norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                                    tid_sum += -log(2π) - 0.5*log(1-ρ^2) - (z1^2 + z2^2 - 2ρ*z1*z2)/(2*(1-ρ^2)) - log(clamp(cst, 1e-10, 0.9999))
+                                elseif isnan(z1) && !isnan(z2)
+                                    cst = cdf(Normal(), phimPdry[i,t1]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                                    tid_sum += log(cdf(Normal(), (phimPdry[i,t1] - ρ*z2)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
+                                elseif !isnan(z1) && isnan(z2)
+                                    cst = cdf(Normal(), phimPdry[j,t2]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+                                    tid_sum += log(cdf(Normal(), (phimPdry[j,t2] - ρ*z1)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            partial_sums[threadid()] += tid_sum
+        end
+        return sum(partial_sums)
+    end
+
+    p = (data, Mat_h, model_type, phimPdry)
+    function optimfunction0(u, p)
+        llh = -pairwise_loglik(p[1], p[3], u, p[4], p[2])
+        return llh
+    end
+
+    @show optimfunction0(param0, p)
+    @show ForwardDiff.gradient(u -> optimfunction0(u, p), param0)
+    optf = OptimizationFunction(optimfunction0, Optimization.AutoForwardDiff())
+    prob = OptimizationProblem(optf, param0, p; lb=lower, ub=upper)
+    @time sol = solve(prob, Optim.LBFGS(), maxiters=maxiter)
+    return model_type(1.0, sol.u...)
+end
+
+using TruncatedMVN
+function simulate_iterative(gf::GaussianField, times, lagt::Int, Y, Pdry)
+
+    D = size(gf.Mat_h, 1)
+    N = length(times)
+
+    # Spatial distance matrix
+    dist_s = gf.Mat_h
+
+    phimPdry = quantile.(Normal(), Pdry)
+    lb = ifelse.(Y .== 1, phimPdry, -Inf)
+    ub = ifelse.(Y .== 0, phimPdry, Inf)
+
+
+    # make covariance matrices of necessary lags
+    Covariancesmatrices = [cov_spatiotemporal(gf.model, dist_s, l) for l in 0:(lagt+1)]
+    C0 = Covariancesmatrices[0+1] # spatial cov at lag 0
+    C_1tot = zeros(eltype(Covariancesmatrices[1]), lagt * D, lagt * D)
+
+    for i in 1:lagt
+        for j in 1:lagt
+            C_1tot[(i-1)*D+1:i*D, (j-1)*D+1:j*D] .= Covariancesmatrices[abs(i - j)+1]
+        end
+    end
+    C_ttotp1 = zeros(eltype(Covariancesmatrices[1]), D, lagt * D)
+    for j in 1:lagt
+        C_ttotp1[:, (j-1)*D+1:j*D] .= Covariancesmatrices[j+1]
+    end
+
+
+
+
+
+    matm = C_ttotp1 * inv(C_1tot)
+    Sigmat = C0 - matm * transpose(C_ttotp1)
+
+    # Storage
+    Zsim = zeros(D, N)
+
+    # # Initial block (lags)
+    # lbinit=vec(lb[:,1:lagt])
+    # ubinit=vec(ub[:,1:lagt])
+    # Zinit = TruncatedMVN.sample(TruncatedMVNormal(zeros(lagt * D), Matrix(Symmetric(C_1tot)),lbinit,ubinit),1)
+    # for l in 1:lagt
+    #     Zsim[:, l] .= Zinit[(1+(l-1)*D):(l*D)]
+    # end
+
+    # unconditional (mean zero, full covariance for 1st day)
+    Zsim[:, 1] .= TruncatedMVN.sample(TruncatedMVNormal(zeros(D), Matrix(Symmetric(C0)), lb[:, 1], ub[:, 1]), 1)
+
+    for t in 2:lagt
+        Zprec = stack_reverse_columns((Zsim[:, (1):(t-1)]))  # previous lagt day
+        C_1tott = zeros(eltype(Covariancesmatrices[1]), (t - 1) * D, (t - 1) * D)
+
+        for i in 1:(t-1)
+            for j in 1:(t-1)
+                C_1tott[(i-1)*D+1:i*D, (j-1)*D+1:j*D] .= Covariancesmatrices[abs(i - j)+1]
+            end
+        end
+        C_ttotp1t = zeros(eltype(Covariancesmatrices[1]), D, (t - 1) * D)
+        for j in 1:(t-1)
+            C_ttotp1t[:, (j-1)*D+1:j*D] .= Covariancesmatrices[j+1]
+        end
+
+
+
+
+
+        matmt = C_ttotp1t * inv(C_1tott)
+        Sigmatt = C0 - matmt * transpose(C_ttotp1t)
+        Zsim[:, t] .= TruncatedMVN.sample(TruncatedMVNormal(matmt * Zprec, Matrix(Symmetric(Sigmatt)), lb[:, t], ub[:, t]), 1)
+
+    end
+    # Iterative simulation
+    for t in (lagt+1):N
+        Zprec = stack_reverse_columns((Zsim[:, (t-lagt):(t-1)]))  # previous lagt day
+        Zsim[:, t] .= TruncatedMVN.sample(TruncatedMVNormal(matm * Zprec, Matrix(Symmetric(Sigmat)), lb[:, t], ub[:, t]), 1)
+    end
+
+    return Zsim
 end

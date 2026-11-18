@@ -1,7 +1,8 @@
 # Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
-using Pkg
-Pkg.activate("HMMSPAcodepaper")
-Pkg.instantiate()
+cd(@__DIR__)
+
+
+
 
 begin
     include("../13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
@@ -23,6 +24,8 @@ begin
     using DataFrames
     include("../13PeriodicHMMSpatialBernoulli/estimation_functions_BandR.jl")
 end
+using LaTeXStrings, Plots
+
 # begin
 #     include("/home/caroline/Gitlab_SWG_Caro/hmmspa/13PeriodicHMMSpatialBernoulli/PeriodicHMMSpa.jl")
 #     Random.seed!(0)
@@ -64,7 +67,9 @@ end
 # using DataFrames
 #     include("/home/caroline/Gitlab_SWG_Caro/hmmspa/13PeriodicHMMSpatialBernoulli/estimation_functions_BandR.jl")
 # end
-
+using Optim, LineSearches
+using OptimizationOptimJL
+solver = Optim.LBFGS(linesearch = BackTracking())  
 
 # test --------------------------------------#
 tdist = 0.3
@@ -78,13 +83,13 @@ n2t = n_to_t(my_N, my_T)
 
 
 
-my_distance = Matrix(CSV.read("./00data/transformedECAD_locsdistances.csv", DataFrame, header=false))
-my_locations = Matrix(CSV.read("./00data/transformedECAD_locs.csv", DataFrame, header=false))
+my_distance = Matrix(CSV.read("../00data/transformedECAD_locsdistances.csv", DataFrame, header=false))
+my_locations = Matrix(CSV.read("../00data/transformedECAD_locs.csv", DataFrame, header=false))
 my_D = length(my_locations[:, 1])
 
 
 
-p = scatter(my_locations[:, 1], my_locations[:, 2]);
+# p = scatter(my_locations[:, 1], my_locations[:, 2]);
 
 my_autoregressive_order = 0
 
@@ -138,7 +143,7 @@ thetaR[:, 1] .= copy(my_Range_θ[:, 1]) .-log(10)# cheating on initial guess to 
 hmm = Trig2PeriodicHMMspaMemory(fill(1 / my_K, my_K), thetaA, thetaB, thetaR, my_T, my_distance)
 p1, p2, p3 = PlotFitAndReal(model, hmm; indices_sta=1:2);
 pp = plot(p1, p2, p3, layout=@layout [a b; c]; size=(1000, 1000))
-savefig(pp,"./13PeriodicHMMSpatialBernoulli/res_sim_data_BandR/pairwise_K"*string(my_K)*"_memory"*string(my_autoregressive_order)*"_T"*string(my_T)*"_Neq"*string(my_N)*"_D"*string(my_D)*"_t"*string(tdist)*"beforefit.png")
+savefig(pp,"../13PeriodicHMMSpatialBernoulli/res_sim_data_BandR/pairwise_K"*string(my_K)*"_memory"*string(my_autoregressive_order)*"_T"*string(my_T)*"_Neq"*string(my_N)*"_D"*string(my_D)*"_t"*string(tdist)*"beforefit.png")
 
 
 tol = 1e-4
@@ -146,19 +151,18 @@ tol = 1e-4
 D = size(my_locations, 1)
 Y_past = rand(Bool, my_autoregressive_order, D)
 
-using LaTeXStrings, Plots
 println("Before estimation: ", thetaR)
-using Profile
-using BenchmarkTools
+# using Profile
+# using BenchmarkTools
 
 
 # with usual weights
 @time begin
-    history2, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmm, thetaA, thetaB, thetaR, Y, Y_past; n2t=n2t, maxiter=5, tol=tol, maxiters_R=100, display=:iter, tdist=tdist, QMC_m=30)
+    history2, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmm, thetaA, thetaB, thetaR, Y, Y_past;solver=solver, n2t=n2t, maxiter=5, tol=tol, maxiters_R=100, display=:iter, tdist=tdist, QMC_m=30)
 end
 pp1 = plot(history2["logtots"])
 p1, p2, p3 = PlotFitAndReal(hmm, model; indices_sta=1:2);
 
 
 pp = plot(p1, p2, p3, layout=@layout [a b; c]; size=(1000, 1000))
-savefig(pp,"./13PeriodicHMMSpatialBernoulli/res_sim_data_BandR/pairwise_K"*string(my_K)*"_memory"*string(my_autoregressive_order)*"_T"*string(my_T)*"_Neq"*string(my_N)*"_D"*string(my_D)*"_t"*string(tdist)*".png")
+savefig(pp,"../13PeriodicHMMSpatialBernoulli/res_sim_data_BandR/pairwise_K"*string(my_K)*"_memory"*string(my_autoregressive_order)*"_T"*string(my_T)*"_Neq"*string(my_N)*"_D"*string(my_D)*"_t"*string(tdist)*".png")
