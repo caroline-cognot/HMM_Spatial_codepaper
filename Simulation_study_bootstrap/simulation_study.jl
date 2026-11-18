@@ -21,9 +21,9 @@ using CSV, DataFrames, Dates, JLD2
 using Base.Threads
 number=Threads.nthreads()
 
-include("./23precip_intensity/EGPD_functions.jl")
-include("./23precip_intensity/EGPD_class.jl")
-include("./23precip_intensity/covariance_functions.jl")
+include("EGPD_functions.jl")
+include("EGPD_class.jl")
+include("covariance_functions.jl")
 
 ##############################################################################
 # 0. Global settings
@@ -44,10 +44,10 @@ const middle_bound = 1.0
 # 1. Load spatial metadata
 ##############################################################################
 
-my_distance = Matrix(CSV.read("./00data/transformedECAD_locsdistances.csv", DataFrame, header=false))
-my_locations = Matrix(CSV.read("./00data/transformedECAD_locs.csv", DataFrame, header=false))
+my_distance = Matrix(CSV.read("transformedECAD_locsdistances.csv", DataFrame, header=false))
+my_locations = Matrix(CSV.read("transformedECAD_locs.csv", DataFrame, header=false))
 my_D = size(my_locations, 1)
-locsdata = CSV.read("./00data/transformedECAD_stations.csv", DataFrame, header=true)
+locsdata = CSV.read("transformedECAD_stations.csv", DataFrame, header=true)
 locsdata.LON = my_locations[:, 1]
 locsdata.LAT = my_locations[:, 2]
 coordll  = [locsdata.LON locsdata.LAT]
@@ -67,7 +67,7 @@ n2t        = dayofyear_Leap.(every_year)
 # 3. Load true parameters (estimated on real data)
 ##############################################################################
 
-hmmspadata = load("./13PeriodicHMMSpatialBernoulli/res_real_data/parameters/K4_resu_18627days_degree1_maxiter100_m1_R0500_QMCm30.jld2")
+hmmspadata = load("K4_resu_18627days_degree1_maxiter100_m1_R0500_QMCm30.jld2")
 
 iter_true = argmax(hmmspadata["logtots"])
 thetaA_true = hmmspadata["all_thetaA_iterations"][iter_true + 1]
@@ -77,8 +77,8 @@ a_true      = hmmspadata["hmm"].a
 
 modeltrue = Trig2ARPeriodicHMMSpatial(a_true, thetaA_true, thetaB_true, thetaR_true, my_T, my_distance)
 
-margins_true  = load("./23precip_intensity/res_real_data/full_periodicEGPD_K42.jld2")
-covmodel_true = load("./23precip_intensity/res_real_data/GMcov_withmarginalsdeg2.jld2")["fitted"]
+margins_true  = load("full_periodicEGPD_K42.jld2")
+covmodel_true = load("GMcov_withmarginalsdeg2.jld2")["fitted"]
 
 ##############################################################################
 # 4. Simulate one replicate (Z, Y, R) from the true model
