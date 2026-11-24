@@ -97,7 +97,7 @@ hmm_random   = randARPeriodicHMM(my_K, my_T, my_D, my_autoregressive_order; ξ=�
     hmm_slice, θᴬ_slice, θᴮ_slice, Y, Y_past;
     maxiter=10000, robust=true, display=:final, silence=true, tol=1e-3, θ_iters=true, n2t=n2t)
 
-# ── Step 2: EM fit (spatial, full likelihood) ─────────────────────────────────
+# ── Step 2: EM fit (spatial, ) ─────────────────────────────────
 println("\n=== Step 2: modifed EM fit  ===")
 thetaA_em = copy(θq_bw)
 thetaB_em = copy(θy_bw)

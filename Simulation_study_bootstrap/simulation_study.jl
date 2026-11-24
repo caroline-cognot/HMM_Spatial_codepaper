@@ -28,6 +28,7 @@ cd(@__DIR__)
 using Pkg
 Pkg.activate(".")
 
+
 using SmoothPeriodicStatsModels
 using Distributions
 using Optimization, OptimizationOptimJL, LineSearches
@@ -38,9 +39,10 @@ using CSV, DataFrames, Dates, JLD2
 using Base.Threads
 number=Threads.nthreads()
 
-include("EGPD_functions.jl")
-include("EGPD_class.jl")
-include("covariance_functions.jl")
+include("./EGPD_functions.jl")
+include("./EGPD_class.jl")
+include("./covariance_functions.jl")
+
 
 ##############################################################################
 # 0. Global settings
@@ -184,6 +186,21 @@ thetaR_fit = all_θᴿ[iter_best + 1]
 
 hmm_spa_fit = Trig2ARPeriodicHMMSpatial(
     fill(1 / my_K, my_K), thetaA_fit, thetaB_fit, thetaR_fit, my_T, my_distance)
+
+
+# # use best EM iteration parameters as starting point for CLEM
+# thetaA_clem = copy(thetaA_fit)
+# thetaB_clem = copy(thetaB_fit)
+# thetaR_clem = copy(thetaR_fit)
+
+# hmmCLEM = Trig2PeriodicHMMspaMemory(fill(1/my_K, my_K), thetaA_clem, thetaB_clem, thetaR_clem, my_T, my_distance)
+
+# @time "CLEM fit" history_CLEM, all_thetaA_CLEM, all_thetaB_CLEM, all_thetaR_CLEM = fit_mle_CLEM!(
+#     hmmCLEM, thetaA_clem, thetaB_clem, thetaR_clem, Y, Y_past;
+#     solver=solver, n2t=n2t, maxiter=maxiter_CLEM, tol=tol_CLEM,
+#     maxiters_R=maxiters_R, display=:iter, tdist=tdist, wp=wp, QMC_m=QMC_m_CLEM)
+
+
 
 # 5c. Viterbi decoding
 Zhat = viterbi(hmm_spa_fit, Y, Y_past'; n2t=n2t, QMC_m=QMC_m)
