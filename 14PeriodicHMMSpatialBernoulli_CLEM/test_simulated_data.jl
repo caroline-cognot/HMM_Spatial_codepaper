@@ -44,7 +44,7 @@ pert = 0.5
 
 # test --------------------------------------#
 tdist = 1.2
-maxiter = 1000
+maxiter = 500
 maxiterEM = 40
 my_K = 2# Number of Hidden states
 my_T = 3 # Period
@@ -109,7 +109,7 @@ Y_past = rand(Bool, my_autoregressive_order, my_D)
 
 
 
-include("../14PeriodicHMMSpatialBernoulli_CLEM/estimation_functions_BandR_v2.jl")
+include("../14PeriodicHMMSpatialBernoulli_CLEM/estimation_functions_BandR_v3.jl")
 
 # test --------------------------------------#
 
@@ -149,12 +149,15 @@ hmm_init= Trig2PeriodicHMMspaMemory(fill(1 / my_K, my_K), thetaA_init, thetaB_in
 
 #  hmmCLEM = Trig2PeriodicHMMspaMemory(copy(my_a),thetaA, thetaB, thetaR, my_T, my_distance);
 # hmm_init = Trig2PeriodicHMMspaMemory(copy(my_a), copy(thetaA), copy(thetaB), copy(thetaR), my_T, my_distance);
-
+using Optim, LineSearches
+using OptimizationOptimJL
+solver = Optim.LBFGS(linesearch = BackTracking())  
 @time begin
     history2, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle_CLEM!(hmmCLEM, thetaA, thetaB, thetaR, Y, Y_past; n2t=n2t, maxiter=maxiter, tol=1e-5, maxiters_R=100, display=:iter, tdist=tdist,wp=wp,QMC_m=1000)
 end
+using Plots
 pp1 = plot(history2["logtots"])
-savefig(pp1, "./PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/logtotspairwise_K" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")
+savefig(pp1, "./14PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/logtotspairwise_K" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")
 
 logtots = history2["logtots"]
 
@@ -204,12 +207,12 @@ end
 #  hmmEM = Trig2PeriodicHMMspaMemory(copy(my_a),thetaA, thetaB, thetaR, my_T, my_distance);
 
 @time begin
-    history2, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmmEM, thetaA, thetaB, thetaR, Y, Y_past; n2t=n2t, maxiter=minimum([100,maxiter,maxiterEM]), tol=5*1e-3, maxiters_R=100, display=:iter, tdist=tdist, wp=wp,QMC_m=100)
+    history2, all_thetaA_iterations, all_thetaB_iterations, all_thetaR_iterations = fit_mle!(hmmEM, thetaA, thetaB, thetaR, Y, Y_past;solver=solver, n2t=n2t, maxiter=minimum([100,maxiter,maxiterEM]), tol=5*1e-3, maxiters_R=100, display=:iter, tdist=tdist, wp=wp,QMC_m=100)
 end
 pp1 = plot(history2["logtots"])
-savefig(pp1, "./PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/logtotsfull_K" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * ".png")
+savefig(pp1, "./14PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/logtotsfull_K" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * ".png")
 
-function PlotCLEMandEMandreal(hmmCLEM::PeriodicHMMSpaMemory,hmmEM::PeriodicHMMSpaMemory,model; indices_sta=1:size(hmm, 2))
+function PlotCLEMandEMandreal(hmmCLEM::PeriodicHMMSpaMemory,hmmEM::PeriodicHMMSpaMemory,model; indices_sta=1:size(hmmCLEM, 2))
     K = size(hmmCLEM, 1)
     d = size(hmmCLEM, 2)
     T = size(hmmCLEM, 3)
@@ -277,9 +280,9 @@ end
 
 p1, p2, p3 = PlotCLEMandEMandreal(hmmCLEM,hmmEM, model; indices_sta=1:4);
 pp = plot(p1, p2, p3, layout=(1,3); size=(1000, 400))
-savefig(pp, "./PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/CLEMBR_VS_EM"* string(my_degree_of_P) *"deg" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")
+savefig(pp, "./14PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/CLEMBR_VS_EM"* string(my_degree_of_P) *"deg" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")
 
-function PlotCLEMandCLEMandreal(hmmCLEM::PeriodicHMMSpaMemory,hmmEM::PeriodicHMMSpaMemory,model; indices_sta=1:size(hmm, 2))
+function PlotCLEMandCLEMandreal(hmmCLEM::PeriodicHMMSpaMemory,hmmEM::PeriodicHMMSpaMemory,model; indices_sta=1:size(hmmCLEM, 2))
     K = size(hmmCLEM, 1)
     d = size(hmmCLEM, 2)
     T = size(hmmCLEM, 3)
@@ -346,9 +349,9 @@ function PlotCLEMandCLEMandreal(hmmCLEM::PeriodicHMMSpaMemory,hmmEM::PeriodicHMM
 end
 p1, p2, p3 = PlotCLEMandCLEMandreal(hmmCLEM,hmmCLEM2, model; indices_sta=1:4);
 pp = plot(p1, p2, p3, layout=(1,3); size=(1000, 400))
-savefig(pp, "./PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/CLEMBR_VS_CLEMBRbest"* string(my_degree_of_P) *"deg" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")
+savefig(pp, "./14PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/CLEMBR_VS_CLEMBRbest"* string(my_degree_of_P) *"deg" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")
 
-function PlotCLEMandinitandreal(hmmCLEM::PeriodicHMMSpaMemory,hmmEM::PeriodicHMMSpaMemory,model; indices_sta=1:size(hmm, 2))
+function PlotCLEMandinitandreal(hmmCLEM::PeriodicHMMSpaMemory,hmmEM::PeriodicHMMSpaMemory,model; indices_sta=1:size(hmmCLEM, 2))
     K = size(hmmCLEM, 1)
     d = size(hmmCLEM, 2)
     T = size(hmmCLEM, 3)
@@ -415,9 +418,9 @@ function PlotCLEMandinitandreal(hmmCLEM::PeriodicHMMSpaMemory,hmmEM::PeriodicHMM
 end
 p1, p2, p3 = PlotCLEMandinitandreal(hmmCLEM,hmm_init, model; indices_sta=1:4);
 pp = plot(p1, p2, p3, layout=(1,3); size=(1000, 400))
-savefig(pp, "./PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/CLEMBR_VS_CLEMInit"* string(my_degree_of_P) *"deg" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")
+savefig(pp, "./14PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/CLEMBR_VS_CLEMInit"* string(my_degree_of_P) *"deg" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")
 
-function PlotCLEMandreal(hmmCLEM::PeriodicHMMSpaMemory,model; indices_sta=1:size(hmm, 2))
+function PlotCLEMandreal(hmmCLEM::PeriodicHMMSpaMemory,model; indices_sta=1:size(hmmCLEM, 2))
     K = size(hmmCLEM, 1)
     d = size(hmmCLEM, 2)
     T = size(hmmCLEM, 3)
@@ -480,4 +483,4 @@ function PlotCLEMandreal(hmmCLEM::PeriodicHMMSpaMemory,model; indices_sta=1:size
 end
 p1, p2, p3 = PlotCLEMandreal(hmmCLEM, model; indices_sta=1:4);
 pp = plot(p1, p2, p3, layout=(1,3); size=(1000, 400))
-savefig(pp, "./PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/CLEM_vs_REAL"* string(my_degree_of_P) *"deg" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")
+savefig(pp, "./14PeriodicHMMSpatialBernoulli_CLEM/res_sim_data/CLEM_vs_REAL"* string(my_degree_of_P) *"deg" * string(my_K) * "_memory" * string(my_autoregressive_order) * "_T" * string(my_T) * "_Neq" * string(my_N) * "_D" * string(my_D) * "_t" * string(tdist) * "maxiterCLEM_is_"*string(maxiter)*"seed"*string(seed)*".png")

@@ -1,3 +1,20 @@
+
+# Simulation study proposée :
+
+# - Récupérer les paramètres "réels" de pluie : HMM, puis precip;  ce sont des params trigos ! donc on verra si ça a un sens ou pas 
+# - générer des données complètes : Z,Y,R à partir de celui-là pour <51 ans, peut-être seulement l'équivalent de 10 ans (pour que ce soit manageable).
+# - Sur chacune de ces séries : 
+# 	- Estimer les params du HMM; 
+# 	- Inférer Zhat 
+# 	- Estimer les params EGPD
+# 	- Estimer les params de la covariance (nouveau modèle).
+# - Mettre dans une table, pour chaque paramètre HMM : vrai param - moyenne param estimé - mediane - quelques quantiles. on peut éventuellement faire une table Lambda, une table Q, une table R.
+# - Comparer les classifications de Z/Zhat (je ne sais pas encore comment)
+# - Mettre dans une table, pour chaque param de precip, la même chose que pour HMM. Il y a bcp de stations : cette table sera extrêmement grande ! Mais je ne vois pas trop quoi faire d'autre. Faire une table pour chaque station et les laisser sur le git ? on peut en garder simplement une.
+# - Mettre dans une (petite) table les params de covariance GM : mm chose que pour HMM mais en sacrément plus simple.  trop facile !
+
+
+
 ##############################################################################
 # Strategy (single replicate, to be run many times on cluster):
 #   1. Load parameters estimated on real data ("true" parameters)
