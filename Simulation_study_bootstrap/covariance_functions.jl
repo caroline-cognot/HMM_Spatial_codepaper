@@ -1,6 +1,6 @@
 # Copyright (c) 2026 EDF <caroline.cognot@agroparistech.fr
 using Statistics
-using StatsPlots
+# using StatsPlots
 
 """
     spatiotemporal_correlation(data, mat_dist, max_lag_t, max_dist; min_pairs=30)
@@ -332,69 +332,69 @@ end
 
 
 
-"""
-    plot_covariance_vs_distance(model::CovarianceStructure, h_vals, u_lags; normalize=false)
+# """
+#     plot_covariance_vs_distance(model::CovarianceStructure, h_vals, u_lags; normalize=false)
 
-Plot the spatio-temporal covariance function as a function of spatial distance
-for different temporal lags.
+# Plot the spatio-temporal covariance function as a function of spatial distance
+# for different temporal lags.
 
-# Arguments
-- `model`    : a fitted covariance model (ExpExp, GneitingMatern, etc.)
-- `h_vals`   : vector of spatial distances (e.g. 0:5:500 km)
-- `u_lags`   : vector of temporal lags to plot (e.g. [0,1,2,5,10])
-- `normalize`: if true, plots correlation (cov/sill) instead of covariance
-"""
-function plot_covariance_vs_distance(model::CovarianceStructure, h_vals, u_lags; normalize=false)
-    plt = plot(; xlabel="Distance (km)", ylabel=normalize ? "Correlation" : "Covariance",
-               legend=:topright, lw=2)
+# # Arguments
+# - `model`    : a fitted covariance model (ExpExp, GneitingMatern, etc.)
+# - `h_vals`   : vector of spatial distances (e.g. 0:5:500 km)
+# - `u_lags`   : vector of temporal lags to plot (e.g. [0,1,2,5,10])
+# - `normalize`: if true, plots correlation (cov/sill) instead of covariance
+# """
+# function plot_covariance_vs_distance(model::CovarianceStructure, h_vals, u_lags; normalize=false)
+#     plt = plot(; xlabel="Distance (km)", ylabel=normalize ? "Correlation" : "Covariance",
+#                legend=:topright, lw=2)
 
-    for u in u_lags
-        covs = cov_spatiotemporal.(Ref(model), h_vals, u)
-        if normalize
-            covs ./= model.sill  # convert to correlation
-        end
-        plot!(plt, h_vals, covs, label="lag = $u")
-    end
+#     for u in u_lags
+#         covs = cov_spatiotemporal.(Ref(model), h_vals, u)
+#         if normalize
+#             covs ./= model.sill  # convert to correlation
+#         end
+#         plot!(plt, h_vals, covs, label="lag = $u")
+#     end
 
-    display(plt)
-    return plt
-end
+#     display(plt)
+#     return plt
+# end
 
-using StatsPlots
+# using StatsPlots
 
-"""
-    plot_covariance_vs_distance(model::CovarianceStructure, dist_bins, time_lags,
-                                corr_mat; normalize=false,title="Spatio-temporal covariance")
+# """
+#     plot_covariance_vs_distance(model::CovarianceStructure, dist_bins, time_lags,
+#                                 corr_mat; normalize=false,title="Spatio-temporal covariance")
 
-Plot spatio-temporal covariance (or correlation) as a function of spatial distance
-for different temporal lags, overlaying empirical estimates.
-"""
+# Plot spatio-temporal covariance (or correlation) as a function of spatial distance
+# for different temporal lags, overlaying empirical estimates.
+# """
 
-function plot_covariance_vs_distance(model::CovarianceStructure, dist_bins, time_lags, 
-                                     corr_mat; normalize=false,title="Spatio-temporal covariance")
+# function plot_covariance_vs_distance(model::CovarianceStructure, dist_bins, time_lags, 
+#                                      corr_mat; normalize=false,title="Spatio-temporal covariance")
 
-    plt = plot(; xlabel="Distance (km)", ylabel=normalize ? "Correlation" : "Covariance",
-               legend=:topright, lw=2,title=title )
+#     plt = plot(; xlabel="Distance (km)", ylabel=normalize ? "Correlation" : "Covariance",
+#                legend=:topright, lw=2,title=title )
 
-    for u in time_lags
-        # Theoretical curve
-        covs = cov_spatiotemporal.(Ref(model), dist_bins, u)
-        if normalize
-            covs ./= model.sill
-        end
-        plot!(plt, dist_bins, covs, label="Model, lag=$u", lw=2,c=u)
+#     for u in time_lags
+#         # Theoretical curve
+#         covs = cov_spatiotemporal.(Ref(model), dist_bins, u)
+#         if normalize
+#             covs ./= model.sill
+#         end
+#         plot!(plt, dist_bins, covs, label="Model, lag=$u", lw=2,c=u)
 
-        # Empirical estimates (only if lag exists in corr_mat)
-        li = findfirst(==(u), time_lags)
-        if li !== nothing
-            emp = corr_mat[li, :]
-            scatter!(plt, dist_bins, emp; label="Empirical, lag=$u", marker=:circle, ms=4,c=u)
-        end
-    end
+#         # Empirical estimates (only if lag exists in corr_mat)
+#         li = findfirst(==(u), time_lags)
+#         if li !== nothing
+#             emp = corr_mat[li, :]
+#             scatter!(plt, dist_bins, emp; label="Empirical, lag=$u", marker=:circle, ms=4,c=u)
+#         end
+#     end
 
-    display(plt)
-    return plt
-end
+#     display(plt)
+#     return plt
+# end
 
 
 """
@@ -498,141 +498,141 @@ return mean(CRs, dims=3)[:, :, 1]
 end
 
 
-"""
-plot_obs_vs_sim(Robs, Rsim)
+# """
+# plot_obs_vs_sim(Robs, Rsim)
 
-Compute continuity ratios for observed and simulated data,
-then scatter plot obs vs. sim.
-"""
-function plotCR_obs_vs_sim(Robs, Rsim)
-CR_obs = continuity_ratio(Robs)
-CR_sim = continuity_ratio(Rsim)
+# Compute continuity ratios for observed and simulated data,
+# then scatter plot obs vs. sim.
+# """
+# function plotCR_obs_vs_sim(Robs, Rsim)
+# CR_obs = continuity_ratio(Robs)
+# CR_sim = continuity_ratio(Rsim)
 
-mask = .!(isnan.(CR_obs) .| isnan.(CR_sim))
-x = CR_obs[mask]
-y = CR_sim[mask]
+# mask = .!(isnan.(CR_obs) .| isnan.(CR_sim))
+# x = CR_obs[mask]
+# y = CR_sim[mask]
 
-scatter(x, y, xlabel="Observed continuity ratio", ylabel="Simulated continuity ratio",
-        title="Observed vs Simulated Continuity Ratios",label=:none)
-        Plots.abline!(1, 0, line=:dash,label=:none)
+# scatter(x, y, xlabel="Observed continuity ratio", ylabel="Simulated continuity ratio",
+#         title="Observed vs Simulated Continuity Ratios",label=:none)
+#         Plots.abline!(1, 0, line=:dash,label=:none)
 
-end
+# end
 
-function plotCR_obs_vs_sim(Robs, Rsim, locsdata; threshold=1.5)
-    CR_obs = continuity_ratio(Robs)
-    CR_sim = continuity_ratio(Rsim)
+# function plotCR_obs_vs_sim(Robs, Rsim, locsdata; threshold=1.5)
+#     CR_obs = continuity_ratio(Robs)
+#     CR_sim = continuity_ratio(Rsim)
 
-    mask = .!(isnan.(CR_obs) .| isnan.(CR_sim))
-    x = CR_obs[mask]
-    y = CR_sim[mask]
+#     mask = .!(isnan.(CR_obs) .| isnan.(CR_sim))
+#     x = CR_obs[mask]
+#     y = CR_sim[mask]
 
-    p=scatter(x, y, xlabel="Observed continuity ratio", ylabel="Simulated continuity ratio",
-            title="Observed vs Simulated Continuity Ratios", label=:none)
-    Plots.abline!(p,1, 0, line=:dash, label=:none)
+#     p=scatter(x, y, xlabel="Observed continuity ratio", ylabel="Simulated continuity ratio",
+#             title="Observed vs Simulated Continuity Ratios", label=:none)
+#     Plots.abline!(p,1, 0, line=:dash, label=:none)
 
-    # Add labels for observed > threshold
-    idx = findall(CR_obs .> threshold)
-    for I in idx
-        i, j = I[1], I[2]            
-        if !isnan(CR_obs[i,j]) && !isnan(CR_sim[i,j])
-            labeltxt = string(locsdata.STANAME[i], " & ", locsdata.STANAME[j])
-            annotate!(p,CR_obs[i,j], CR_sim[i,j], Plots.text(labeltxt, 3, :black))
-        end
-    end
-    idx = findall(CR_sim .> threshold)
-    for I in idx
-        i, j = I[1], I[2]            
-        if !isnan(CR_obs[i,j]) && !isnan(CR_sim[i,j])
-            labeltxt = string(locsdata.STANAME[i], " & ", locsdata.STANAME[j])
-            annotate!(p,CR_obs[i,j], CR_sim[i,j], Plots.text(labeltxt, 3, :red))
-        end
-    end
-    return p
-end
+#     # Add labels for observed > threshold
+#     idx = findall(CR_obs .> threshold)
+#     for I in idx
+#         i, j = I[1], I[2]            
+#         if !isnan(CR_obs[i,j]) && !isnan(CR_sim[i,j])
+#             labeltxt = string(locsdata.STANAME[i], " & ", locsdata.STANAME[j])
+#             annotate!(p,CR_obs[i,j], CR_sim[i,j], Plots.text(labeltxt, 3, :black))
+#         end
+#     end
+#     idx = findall(CR_sim .> threshold)
+#     for I in idx
+#         i, j = I[1], I[2]            
+#         if !isnan(CR_obs[i,j]) && !isnan(CR_sim[i,j])
+#             labeltxt = string(locsdata.STANAME[i], " & ", locsdata.STANAME[j])
+#             annotate!(p,CR_obs[i,j], CR_sim[i,j], Plots.text(labeltxt, 3, :red))
+#         end
+#     end
+#     return p
+# end
 
-function plotCR_obs_vs_sim(Robs, Rsim, locsdata; threshold=1.5,dmax=300)
-    CR_obs = continuity_ratio(Robs)
-    CR_sim = continuity_ratio(Rsim)
+# function plotCR_obs_vs_sim(Robs, Rsim, locsdata; threshold=1.5,dmax=300)
+#     CR_obs = continuity_ratio(Robs)
+#     CR_sim = continuity_ratio(Rsim)
 
-    mask = .!(isnan.(CR_obs) .| isnan.(CR_sim) .| (Mat_h.>dmax))
-    x = CR_obs[mask]
-    y = CR_sim[mask]
+#     mask = .!(isnan.(CR_obs) .| isnan.(CR_sim) .| (Mat_h.>dmax))
+#     x = CR_obs[mask]
+#     y = CR_sim[mask]
 
-    p=scatter(x, y, xlabel="Observed continuity ratio", ylabel="Simulated continuity ratio",
-            title="Observed vs Simulated Continuity Ratios", label=:none)
-    Plots.abline!(p,1, 0, line=:dash, label=:none)
+#     p=scatter(x, y, xlabel="Observed continuity ratio", ylabel="Simulated continuity ratio",
+#             title="Observed vs Simulated Continuity Ratios", label=:none)
+#     Plots.abline!(p,1, 0, line=:dash, label=:none)
 
-    # Add labels for observed > threshold
-    idx = findall(CR_obs .> threshold)
-    for I in idx
-        i, j = I[1], I[2]            
-        if !isnan(CR_obs[i,j]) && !isnan(CR_sim[i,j])&& Mat_h[i,j]<dmax
-            labeltxt = string(locsdata.STANAME[i], " & ", locsdata.STANAME[j])
-            annotate!(p,CR_obs[i,j], CR_sim[i,j], Plots.text(labeltxt, 3, :black))
-        end
-    end
-    idx = findall(CR_sim .> threshold)
-    for I in idx
-        i, j = I[1], I[2]            
-        if !isnan(CR_obs[i,j]) && !isnan(CR_sim[i,j]) && Mat_h[i,j]<dmax
-            labeltxt = string(locsdata.STANAME[i], " & ", locsdata.STANAME[j])
-            annotate!(p,CR_obs[i,j], CR_sim[i,j], Plots.text(labeltxt, 3, :red))
-        end
-    end
-    return p
-end
-function fit_mple_nothreads(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, phimPdry; lower=nothing, upper=nothing, maxiter=100)
-    function pairwise_loglik(data, model_type::Type{<:CovarianceStructure}, param, phimPdry, Mat_h; maxdist=maximum(Mat_h) / 3 * 2, maxtime=10)
-    D, Nt = size(data)
-    space_mask = Mat_h .<= maxdist
-    covmodel = model_type(1.0, param...)
-    cov_matrixes = [cov_spatiotemporal(covmodel, Mat_h, timediff) for timediff in 0:maxtime]
+#     # Add labels for observed > threshold
+#     idx = findall(CR_obs .> threshold)
+#     for I in idx
+#         i, j = I[1], I[2]            
+#         if !isnan(CR_obs[i,j]) && !isnan(CR_sim[i,j])&& Mat_h[i,j]<dmax
+#             labeltxt = string(locsdata.STANAME[i], " & ", locsdata.STANAME[j])
+#             annotate!(p,CR_obs[i,j], CR_sim[i,j], Plots.text(labeltxt, 3, :black))
+#         end
+#     end
+#     idx = findall(CR_sim .> threshold)
+#     for I in idx
+#         i, j = I[1], I[2]            
+#         if !isnan(CR_obs[i,j]) && !isnan(CR_sim[i,j]) && Mat_h[i,j]<dmax
+#             labeltxt = string(locsdata.STANAME[i], " & ", locsdata.STANAME[j])
+#             annotate!(p,CR_obs[i,j], CR_sim[i,j], Plots.text(labeltxt, 3, :red))
+#         end
+#     end
+#     return p
+# end
+# function fit_mple_nothreads(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, phimPdry; lower=nothing, upper=nothing, maxiter=100)
+#     function pairwise_loglik(data, model_type::Type{<:CovarianceStructure}, param, phimPdry, Mat_h; maxdist=maximum(Mat_h) / 3 * 2, maxtime=10)
+#     D, Nt = size(data)
+#     space_mask = Mat_h .<= maxdist
+#     covmodel = model_type(1.0, param...)
+#     cov_matrixes = [cov_spatiotemporal(covmodel, Mat_h, timediff) for timediff in 0:maxtime]
     
-    total = 0.0
-    for t1 in 1:Nt
-        for t2 in 1:Nt
-            u = abs(t1 - t2)
-            u > maxtime && continue
-            for i in 1:D
-                for j in 1:D
-                    (!space_mask[i, j] || (i == j && u == 0)) && continue
-                    z1 = data[i, t1]
-                    z2 = data[j, t2]
-                    ρ = clamp(cov_matrixes[u+1][i, j], -0.9999, 0.9999)
-                    if !isnan(z1) && !isnan(z2)
-                        cst = 1 - cdf(Normal(), phimPdry[i,t1]) - cdf(Normal(), phimPdry[j,t2]) + norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
-                        total += -log(2π) - 0.5*log(1-ρ^2) - (z1^2 + z2^2 - 2ρ*z1*z2)/(2*(1-ρ^2)) - log(clamp(cst, 1e-10, 0.9999))
-                    elseif isnan(z1) && !isnan(z2)
-                        cst = cdf(Normal(), phimPdry[i,t1]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
-                        total += log(cdf(Normal(), (phimPdry[i,t1] - ρ*z2)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
-                    elseif !isnan(z1) && isnan(z2)
-                        cst = cdf(Normal(), phimPdry[j,t2]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
-                        total += log(cdf(Normal(), (phimPdry[j,t2] - ρ*z1)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
-                    end
-                end
-            end
-        end
-    end
-    return total
-end
-    p = (data, Mat_h, model_type, phimPdry)
-    function optimfunction0(u, p)
-        y = p[1]
-        Mat_h = p[2]
-        model_type = p[3]
-        phimPdry = p[4]
-        param = u
-        llh = -pairwise_loglik(y, model_type, param, phimPdry, Mat_h)
-        return llh
-    end
-    @show optimfunction0(param0, p)
-    @show ForwardDiff.gradient(u -> optimfunction0(u, p), param0)
-    optf = OptimizationFunction(optimfunction0, Optimization.AutoForwardDiff())
-    prob = OptimizationProblem(optf, param0, p; lb=lower, ub=upper)
-    @time sol = solve(prob, Optim.LBFGS(), maxiters=maxiter) #exp exp model for N = 1000 samples of D=37 stations, takes 12s. 
-    usol = sol.u
-    return model_type(1.0, usol...)
-end
+#     total = 0.0
+#     for t1 in 1:Nt
+#         for t2 in 1:Nt
+#             u = abs(t1 - t2)
+#             u > maxtime && continue
+#             for i in 1:D
+#                 for j in 1:D
+#                     (!space_mask[i, j] || (i == j && u == 0)) && continue
+#                     z1 = data[i, t1]
+#                     z2 = data[j, t2]
+#                     ρ = clamp(cov_matrixes[u+1][i, j], -0.9999, 0.9999)
+#                     if !isnan(z1) && !isnan(z2)
+#                         cst = 1 - cdf(Normal(), phimPdry[i,t1]) - cdf(Normal(), phimPdry[j,t2]) + norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+#                         total += -log(2π) - 0.5*log(1-ρ^2) - (z1^2 + z2^2 - 2ρ*z1*z2)/(2*(1-ρ^2)) - log(clamp(cst, 1e-10, 0.9999))
+#                     elseif isnan(z1) && !isnan(z2)
+#                         cst = cdf(Normal(), phimPdry[i,t1]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+#                         total += log(cdf(Normal(), (phimPdry[i,t1] - ρ*z2)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
+#                     elseif !isnan(z1) && isnan(z2)
+#                         cst = cdf(Normal(), phimPdry[j,t2]) - norm_cdf_2d_vfast(phimPdry[i,t1], phimPdry[j,t2], ρ)
+#                         total += log(cdf(Normal(), (phimPdry[j,t2] - ρ*z1)/sqrt(1-ρ^2))) - log(clamp(cst, 1e-10, 0.9999))
+#                     end
+#                 end
+#             end
+#         end
+#     end
+#     return total
+# end
+#     p = (data, Mat_h, model_type, phimPdry)
+#     function optimfunction0(u, p)
+#         y = p[1]
+#         Mat_h = p[2]
+#         model_type = p[3]
+#         phimPdry = p[4]
+#         param = u
+#         llh = -pairwise_loglik(y, model_type, param, phimPdry, Mat_h)
+#         return llh
+#     end
+#     @show optimfunction0(param0, p)
+#     @show ForwardDiff.gradient(u -> optimfunction0(u, p), param0)
+#     optf = OptimizationFunction(optimfunction0, Optimization.AutoForwardDiff())
+#     prob = OptimizationProblem(optf, param0, p; lb=lower, ub=upper)
+#     @time sol = solve(prob, Optim.LBFGS(), maxiters=maxiter) #exp exp model for N = 1000 samples of D=37 stations, takes 12s. 
+#     usol = sol.u
+#     return model_type(1.0, usol...)
+# end
 
 function fit_mple(data, Mat_h, model_type::Type{<:CovarianceStructure}, param0, phimPdry; lower=nothing, upper=nothing, maxiter=100)
     function pairwise_loglik(data, model_type::Type{<:CovarianceStructure}, param, phimPdry, Mat_h; maxdist=maximum(Mat_h) / 3 * 2, maxtime=10)

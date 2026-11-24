@@ -118,36 +118,36 @@ end
 
 
 
-######### try the new functions ###############################"
-# Parameters
-a, b = 0.1, 0.5
-p = 0.3
-uniform_part = Uniform(a, b)
-tail_part = ExtendedGeneralizedPareto( TBeta(0.4), GeneralizedPareto(0.0,3, 0.1))   # Example distribution for y > b
+# ######### try the new functions ###############################"
+# # Parameters
+# a, b = 0.1, 0.5
+# p = 0.3
+# uniform_part = Uniform(a, b)
+# tail_part = ExtendedGeneralizedPareto( TBeta(0.4), GeneralizedPareto(0.0,3, 0.1))   # Example distribution for y > b
 
-# Create the mixed distribution
-d = MixedUniformTail(p, uniform_part, tail_part, a, b)
+# # Create the mixed distribution
+# d = MixedUniformTail(p, uniform_part, tail_part, a, b)
 
-# Example: use it like any Distributions.jl distribution
-println(pdf(d, 0.2))      # PDF in uniform part
-println(cdf(d, 0.2))      # CDF in uniform part
-println(quantile(d, 0.8)) # Quantile in tail part
+# # Example: use it like any Distributions.jl distribution
+# println(pdf(d, 0.2))      # PDF in uniform part
+# println(cdf(d, 0.2))      # CDF in uniform part
+# println(quantile(d, 0.8)) # Quantile in tail part
 
-# Random draws
-samples = rand(d, 1000)
+# # Random draws
+# samples = rand(d, 1000)
 
-using Plots
-histogram(samples, bins=50, normalize=true, label="Sampled PDF")
-Plots.plot!(x -> pdf(d, x), 0, 50, label="Theoretical PDF", lw=2)
+# using Plots
+# histogram(samples, bins=50, normalize=true, label="Sampled PDF")
+# Plots.plot!(x -> pdf(d, x), 0, 50, label="Theoretical PDF", lw=2)
 
 
-dd = fit_mix(MixedUniformTail,samples,initial_values=[10 ,1 ,1])
-samples2=rand(dd,10000)
-histogram!(samples2 ,normalize=true)
+# dd = fit_mix(MixedUniformTail,samples,initial_values=[10 ,1 ,1])
+# samples2=rand(dd,10000)
+# histogram!(samples2 ,normalize=true)
 
-samplesgaussian = rand(Normal(),1000)
-samples3=forced_by_normal_rand(dd,samplesgaussian)
-histogram!(samples2,normalize=true)
+# samplesgaussian = rand(Normal(),1000)
+# samples3=forced_by_normal_rand(dd,samplesgaussian)
+# histogram!(samples2,normalize=true)
 
 
 using Base.Threads
