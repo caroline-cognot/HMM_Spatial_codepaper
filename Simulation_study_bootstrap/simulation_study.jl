@@ -102,7 +102,8 @@ covmodel_true = load("GMcov_withmarginalsdeg2.jld2")["fitted"]
 ##############################################################################
 # 4. Simulate one replicate (Z, Y, R) from the true model
 ##############################################################################
-for replicate in 1:2
+@time "full bootstrap" for replicate in 1:2
+    @show replicate
     seed = 2026 + replicate
     Random.seed!(seed)
 
