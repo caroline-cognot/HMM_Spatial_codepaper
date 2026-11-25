@@ -191,14 +191,83 @@ thetaA_clem = copy(thetaA_fit)
 thetaB_clem = copy(thetaB_fit)
 thetaR_clem = copy(thetaR_fit)
 
+using ArgCheck
+include("../13PeriodicHMMSpatialBernoulli/estimation_functions_BthenR.jl")
+
+include("../14PeriodicHMMSpatialBernoulli_CLEM/estimation_functions_BandR_v3.jl")
+
 hmmCLEM = Trig2PeriodicHMMspaMemory(fill(1/my_K, my_K), thetaA_clem, thetaB_clem, thetaR_clem, my_T, my_distance)
 
+begin  using ArgCheck
+    using Base: OneTo
+    using ShiftedArrays: lead, lag
+    using Distributed
+    # ## Optimization
+    using JuMP, Ipopt
+    using Optimization, OptimizationMOI
+    using LsqFit
+    using Dates
+    using LaTeXStrings
+    using Profile
+    using BenchmarkTools
+    using CSV
+    using DataFrames
+end
 @time "CLEM fit" history_CLEM, all_thetaA_CLEM, all_thetaB_CLEM, all_thetaR_CLEM = fit_mle_CLEM!(
     hmmCLEM, thetaA_clem, thetaB_clem, thetaR_clem, Y, Y_past;
-    solver=solver, n2t=n2t, maxiter=maxiter_CLEM, tol=tol_CLEM,
-    maxiters_R=maxiters_R, display=:iter, tdist=tdist, wp=wp, QMC_m=QMC_m_CLEM)
+    solver=solver, n2t=n2t, maxiter=5,
+    maxiters_R=100, display=:iter, tdist=tdist, QMC_m=100)
 
 
+function plot_comparison(hmm_true, hmm_em, hmm_clem; indices_sta=1:min(4, size(hmm_true, 2)))
+    K = size(hmm_true, 1)
+    T = size(hmm_true, 3)
+    nsta = length(indices_sta)
+
+    # Range R
+    p_R = plot(title=L"\rho_{CY,k}^{(t)}", xlabel="t", legend=:topright)
+    for k in 1:K
+        plot!(p_R, 1:T, hmm_true.R[k, :], c=k, label=k==1 ? "True" : "")
+        plot!(p_R, 1:T, hmm_em.R[k, :],   c=k, linestyle=:dash,   label=k==1 ? "EM" : "")
+        plot!(p_R, 1:T, hmm_clem.R[k, :], c=k, linestyle=:dashdot, label=k==1 ? "CLEM" : "")
+    end
+    # dummy series for legend
+    plot!(p_R, 1:T, fill(NaN,T), c=:black, label="True")
+    plot!(p_R, 1:T, fill(NaN,T), c=:black, linestyle=:dash,    label="EM")
+    plot!(p_R, 1:T, fill(NaN,T), c=:black, linestyle=:dashdot, label="CLEM")
+
+    # Transition A
+    pA = [plot(xlabel="t", title="State $k transitions") for k in 1:K]
+    for k in 1:K
+        for l in 1:K
+            plot!(pA[k], 1:T, hmm_true.A[k,l,:], c=l, label=L"Q_{%$(k)\to%$(l)}")
+            plot!(pA[k], 1:T, hmm_em.A[k,l,:],   c=l, linestyle=:dash,    label="")
+            plot!(pA[k], 1:T, hmm_clem.A[k,l,:], c=l, linestyle=:dashdot, label="")
+        end
+        hline!(pA[k], [0.5], c=:black, s=:dot, label="")
+        ylims!(pA[k], 0, 1)
+    end
+    pall_A = plot(pA..., size=(1000, 400))
+
+    # Rain probability B for selected stations
+    pB = [plot(xlabel="t", title=latexstring("\\lambda_{$(indices_sta[j])}^{(t)}")) for j in 1:nsta]
+    for j in 1:nsta
+        for k in 1:K
+            plot!(pB[j], 1:T, [hmm_true.B[k,t,indices_sta[j],1] for t in 1:T], c=k, label="")
+            plot!(pB[j], 1:T, [hmm_em.B[k,t,indices_sta[j],1]   for t in 1:T], c=k, linestyle=:dash,    label="")
+            plot!(pB[j], 1:T, [hmm_clem.B[k,t,indices_sta[j],1] for t in 1:T], c=k, linestyle=:dashdot, label="")
+        end
+        hline!(pB[j], [0.5], c=:black, s=:dot, label="")
+        ylims!(pB[j], 0, 1)
+    end
+    pall_B = plot(pB...)
+
+    return p_R, pall_A, pall_B
+end
+
+p_R, pall_A, pall_B = plot_comparison(modeltrue, hmm_spa_fit, hmmCLEM; indices_sta=1:min(4, my_D))
+
+pp_all = plot(p_R, pall_A, pall_B, layout=(1,3), size=(1500, 400))
 
 # 5c. Viterbi decoding
 Zhat = viterbi(hmm_spa_fit, Y, Y_past'; n2t=n2t, QMC_m=QMC_m)
@@ -260,38 +329,7 @@ upper_cov  = [1000.0, 10.0, 1.0, 1.0, 10.0, 10.0]
 @time "Covariance (Ẑ)" fitted_cov_zhat = fit_mple(XR, my_distance, GneitingMatern, param0_cov,
     quantile.(Normal(), Pdry_zhat); lower=lower_cov, upper=upper_cov, maxiter=100)
 
-##############################################################################
-# 9. Save results
-##############################################################################
 
-save("./simulation_study/replicate"*string(replicate)*".jld2",
-    # True parameters
-    "thetaA_true",   thetaA_true,
-    "thetaB_true",   thetaB_true,
-    "thetaR_true",   thetaR_true,
-    # Fitted HMM parameters
-    "thetaA_fit",    thetaA_fit,
-    "thetaB_fit",    thetaB_fit,
-    "thetaR_fit",    thetaR_fit,
-    # State classification
-    "Z",             Z,
-    "Zhat",          Zhat,
-    "contingency",   contingency,
-    "accuracy",      accuracy,
-    # Intensity margins with Z
-    "param_kappaz",          param_kappaz,
-    "param_sigmaz",          param_sigmaz,
-    "param_xiz",             param_xiz,
-    "param_proba_lowrainz",  param_proba_lowrainz,
-    # Intensity margins with Ẑ
-    "param_kappazhat",          param_kappazhat,
-    "param_sigmazhat",          param_sigmazhat,
-    "param_xizhat",             param_xizhat,
-    "param_proba_lowrainzhat",  param_proba_lowrainzhat,
-    # Covariance parameters
-    "fitted_cov_z",    fitted_cov_z,
-    "fitted_cov_zhat", fitted_cov_zhat,
-)
 
 println("Done. Accuracy Z vs Ẑ: ", round(accuracy, digits=3))
 println("Contingency table (rows=Z, cols=Ẑ):")
