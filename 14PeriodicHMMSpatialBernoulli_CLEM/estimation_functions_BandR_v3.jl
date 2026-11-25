@@ -48,7 +48,7 @@ function fit_mle_one_RB_memory1!(hmm, theta_R, theta_B, h, Y::AbstractArray{<:Re
 end
 
 
-function update_RB_memory1!(hmm::PeriodicHMMSpaMemory,
+function update_RB_memory1_CLEM!(hmm::PeriodicHMMSpaMemory,
     Range_θ::AbstractArray{N,2} where {N}, theta_B::AbstractArray{N,4} where {N},
     γ::AbstractMatrix, wp, Y, Situations::AbstractArray{<:Real}; solver=Optim.LBFGS(), n2t=n_to_t(size(Y, 1), size(hmm, 3))::AbstractVector{<:Integer}, maxiters=10)
     @argcheck size(γ, 1) == size(Y, 1)
@@ -796,7 +796,7 @@ function fit_mle_CLEM!(
 
     @show c_forward[T, 1, 3]
     if K > 1
-        @show norm(hmm.B[1, :, :] .- hmm.B[2, :, :])
+        @show norm(hmm.B[1, :, :,:] .- hmm.B[2, :, :,:])
     end
 
     # FIX: logtot from c_forward, not c_backward
@@ -950,3 +950,5 @@ begin
         end
     end
 end
+
+    using ShiftedArrays: lead, lag
