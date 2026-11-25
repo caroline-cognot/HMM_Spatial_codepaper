@@ -140,10 +140,13 @@ function run_replicate(replicate::Integer)
     margins_ẑ = @time "margins | ẑ" fit_rain_margins(R, ẑ, n2t, θ0; T, a=WET, b=SMALL, maxiters=10_000)
 
     pdry_ẑ = dry_probability(ARPeriodicHMMSpatial(hmm), ẑ, Y, Y_past, n2t)
+
     X̂ = latent_field(R, Y, ẑ, n2t, pdry_ẑ, rain_distributions(margins_ẑ, T; a=WET, b=SMALL))
+    X̂z = latent_field(R, Y, z, n2t, pdry, rain_distributions(margins_z, T; a=WET, b=SMALL))
+
     fit_field(X, pdry) = fit_covariance(X, quantile.(Normal(), pdry), truth.distances, COV_START;
         lower=COV_LOWER, upper=COV_UPPER, maxiters=100)
-    covariance_X = @time "covariance | X" fit_field(ifelse.(Y, X, NaN), pdry)
+    covariance_Xz = @time "covariance | X true z " fit_field(X̂z, pdry)
     covariance_ẑ = @time "covariance | ẑ" fit_field(X̂, pdry_ẑ)
 
     mkpath(OUTPUT)
@@ -151,7 +154,7 @@ function run_replicate(replicate::Integer)
     jldsave(file; replicate, z, z_hat=ẑ,
         hmm=hmm_coefficients(hmm), hmm_logtots=history.logtots, hmm_best_iteration=history.best_iteration,
         margins_z, margins_z_hat=margins_ẑ,
-        covariance_X=covariance_parameters(covariance_X), covariance_z_hat=covariance_parameters(covariance_ẑ),
+        covariance_Xz=covariance_parameters(covariance_Xz), covariance_ẑ=covariance_parameters(covariance_ẑ),
         truth=(hmm=hmm_coefficients(truth.hmm), truth.margins, covariance=covariance_parameters(truth.covariance)))
     return file
 end
