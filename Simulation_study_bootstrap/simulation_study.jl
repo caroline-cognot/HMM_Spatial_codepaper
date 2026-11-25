@@ -99,6 +99,27 @@ modeltrue = Trig2ARPeriodicHMMSpatial(a_true, thetaA_true, thetaB_true, thetaR_t
 margins_true = load("full_periodicEGPD_K42.jld2")
 covmodel_true = load("GMcov_withmarginalsdeg2.jld2")["fitted"]
 
+# some functions 
+# P(dry) for each station/day, given a state sequence and an emission array B
+function pdry_matrix(B, Zs, Ymoins1, n2t)
+    D, N = size(Ymoins1, 1), length(Zs)
+    [1 - B[Zs[n], n2t[n], s, Ymoins1[s, n]+1] for s in 1:D, n in 1:N]
+end
+
+# Map observed R back to the latent Gaussian scale:
+# R → u = F_{k,t,s}(R) → X = quantile of N(0,1) truncated to [Φ⁻¹(pdry), ∞)
+function to_latent(R, di, Zs, Pdry, n2t; ϵ=1e-6)
+    X = similar(R)
+    Threads.@threads for s in axes(R, 1)
+        for n in axes(R, 2)
+            th = quantile(Normal(), Pdry[s, n])
+            u  = clamp(cdf(di[s][Zs[n], n2t[n]], R[s, n]), ϵ, 1 - ϵ)
+            X[s, n] = quantile(Truncated(Normal(), th, Inf), u)
+        end
+    end
+    return X
+end
+
 ##############################################################################
 # 4. Simulate one replicate (Z, Y, R) from the true model
 ##############################################################################
@@ -250,16 +271,32 @@ for replicate in 1:2
         end
     end
 
+
+    function to_uniform_continuous(values::Vector{Float64}, middle_bound::Float64; rng=Random.GLOBAL_RNG)
+    #used to make the small precip values into a uniform variable.
+        step = 0.1
+        jittered = [v - step/2 + step * rand(rng) for v in values]  # add uniform jitter in each bin
+         ecdf_func = StatsBase.ecdf(jittered)
+         uniformized = [0.1 + (middle_bound - 0.1) * ecdf_func(v) for v in jittered]
+     
+         return uniformized              # keep inside bounds
+    end
+
+    Pdry_zhat = pdry_matrix(hmm_spa_fit.B, Zhat, Ymoins1, n2t)
+    XR_Z    = to_latent(R, diz,    Z,    Pdry_true, n2t)
+    XR_Zhat = to_latent(R, dizhat, Zhat, Pdry_zhat, n2t)
+
+
     param0_cov = [280.0, 2/3, 1.0, 0.5, 0.1, 0.5]
     lower_cov = [200.0, 0.1, 0.0, 0.0, 0.00, 0.1]
     upper_cov = [1000.0, 10.0, 1.0, 1.0, 10.0, 10.0]
 
     # With true Z (Pdry_true)
-    @time "Covariance (Z)" fitted_cov_z = fit_mple(XR, my_distance, GneitingMatern, param0_cov,
+    @time "Covariance (Z)" fitted_cov_z = fit_mple(XR_Z, my_distance, GneitingMatern, param0_cov,
         quantile.(Normal(), Pdry_true); lower=lower_cov, upper=upper_cov, maxiter=100)
 
     # With Viterbi Ẑ (Pdry_zhat)
-    @time "Covariance (Ẑ)" fitted_cov_zhat = fit_mple(XR, my_distance, GneitingMatern, param0_cov,
+    @time "Covariance (Ẑ)" fitted_cov_zhat = fit_mple(XR_Zhat, my_distance, GneitingMatern, param0_cov,
         quantile.(Normal(), Pdry_zhat); lower=lower_cov, upper=upper_cov, maxiter=100)
 
     ##############################################################################
