@@ -28,7 +28,8 @@ struct GneitingMatern{T1,T<:Real}
     ν::T
 end
 
-matern(h, c, ν) = iszero(h) ? one(c * ν) : 2^(1 - ν) / gamma(ν) * adbesselkxv(ν, h / c)
+matern_scaled(h, c, ν, scale) = iszero(h) ? one(c * ν) : scale * adbesselkxv(ν, h / c)
+matern(h, c, ν) = matern_scaled(h, c, ν, 2^(1 - ν) / gamma(ν))
 
 """
     covariance(model::GneitingMatern, h, u)
@@ -93,6 +94,31 @@ latent_field(R, Y, z, n2t, pdry, margins) =
     [Y[s, n] ? quantile(Normal(), pdry[s, n] + (1 - pdry[s, n]) * clamp(cdf(margins[z[n], s, n2t[n]], R[s, n]), 1e-6, 1 - 1e-6)) : NaN
      for s in axes(Y, 1), n in axes(Y, 2)]
 
+function _near_pairs(distances, maxdist)
+    D = size(distances, 1)
+    pairs_u0 = Tuple{Int,Int,Float64}[]
+    pairs_u = Tuple{Int,Int,Float64}[]
+    for i in 1:D, j in 1:D
+        h = Float64(distances[i, j])
+        if h ≤ maxdist
+            push!(pairs_u, (i, j, h))
+            i < j && push!(pairs_u0, (i, j, h))
+        end
+    end
+    return pairs_u0, pairs_u
+end
+
+function _lag_pair_params(m::GneitingMatern, pairs, u, scale)
+    ψ = 1 + (u / m.a)^(2m.α)
+    c_u = m.c * ψ^(m.β / 2)
+    amp = m.σ² / ψ^(m.δ + m.β)
+    return map(pairs) do (i, j, h)
+        r = clamp(amp * matern_scaled(h, c_u, m.ν, scale), -0.9999, 0.9999)
+        omr2 = 1 - r^2
+        (i, j, r, sqrt(omr2), inv(2 * omr2), log(omr2) / 2)
+    end
+end
+
 """
     pairwise_loglikelihood(model, X, threshold, distances; maxdist, maxlag = 10)
 
@@ -102,26 +128,61 @@ A dry site is censored below its `threshold`. Pairs are of sites at most `maxdis
 default two thirds of the largest distance) and at most `maxlag` days apart, in both orders.
 """
 function pairwise_loglikelihood(model, X, threshold, distances; maxdist=2maximum(distances) / 3, maxlag=10)
+    pairs_u0, pairs_u = _near_pairs(distances, maxdist)
+    Φc = cdf.(Normal(), threshold)
+    return _pairwise_loglikelihood_precomputed(model, X, threshold, Φc, pairs_u0, pairs_u; maxlag)
+end
+
+function _pairwise_loglikelihood_precomputed(model::GneitingMatern, X, c, Φc, pairs_u0, pairs_u; maxlag=10)
     N = size(X, 2)
-    near = distances .≤ maxdist
-    ρ = [clamp.(covariance(model, distances, u), -0.9999, 0.9999) for u in 0:maxlag]
+    scale = 2^(1 - model.ν) / gamma(model.ν)
+    params_u0 = _lag_pair_params(model, pairs_u0, 0, scale)
+    params_u = [_lag_pair_params(model, pairs_u, u, scale) for u in 1:maxlag]
     tasks = map(Iterators.partition(1:N, cld(N, 4Threads.nthreads()))) do days
-        Threads.@spawn _pairwise_loglikelihood(ρ, X, threshold, near, days)
+        Threads.@spawn _pairwise_loglikelihood(params_u0, params_u, X, c, Φc, days, zero(scale))
     end
     return sum(fetch, tasks)
 end
 
-function _pairwise_loglikelihood(ρ, X, c, near, days)
-    D, N = size(X)
-    ℓ = zero(eltype(first(ρ)))
-    for n₁ in days, u in 0:min(length(ρ) - 1, N - n₁), i in 1:D, j in (u == 0 ? i + 1 : 1):D
-        near[i, j] || continue
-        n₂, r = n₁ + u, ρ[u+1][i, j]
-        # `norm_cdf_2d_vfast` is not symmetric in its two points, so both orders are summed
-        ℓ += pair_loglikelihood(X[i, n₁], X[j, n₂], c[i, n₁], c[j, n₂], r) +
-             pair_loglikelihood(X[j, n₂], X[i, n₁], c[j, n₂], c[i, n₁], r)
+function _pairwise_loglikelihood(params_u0, params_u, X, c, Φc, days, ℓ0)
+    N = size(X, 2)
+    maxlag = length(params_u)
+    ℓ = ℓ0
+    @inbounds for n₁ in days
+        for (i, j, r, sqrt_omr2, inv_2omr2, half_log_omr2) in params_u0
+            ℓ += pair_loglikelihood_both(X[i, n₁], X[j, n₁], c[i, n₁], c[j, n₁], Φc[i, n₁], Φc[j, n₁],
+                r, sqrt_omr2, inv_2omr2, half_log_omr2)
+        end
+        for u in 1:min(maxlag, N - n₁)
+            n₂ = n₁ + u
+            for (i, j, r, sqrt_omr2, inv_2omr2, half_log_omr2) in params_u[u]
+                ℓ += pair_loglikelihood_both(X[i, n₁], X[j, n₂], c[i, n₁], c[j, n₂], Φc[i, n₁], Φc[j, n₂],
+                    r, sqrt_omr2, inv_2omr2, half_log_omr2)
+            end
+        end
     end
     return ℓ
+end
+
+# Sum of loglikelihoods of two standard latent values in both orders (to symmetrize `norm_cdf_2d_vfast`).
+@inline function pair_loglikelihood_both(z₁, z₂, c₁, c₂, Φc₁, Φc₂, ρ, sqrt_omr2, inv_2omr2, half_log_omr2)
+    isnan(z₁) && isnan(z₂) && return zero(ρ)
+    Φ₂_12 = norm_cdf_2d_vfast(c₁, c₂, ρ)
+    Φ₂_21 = norm_cdf_2d_vfast(c₂, c₁, ρ)
+    if isnan(z₁)
+        return 2 * logcdf(Normal(), (c₁ - ρ * z₂) / sqrt_omr2) -
+               log(clamp(Φc₁ - Φ₂_12, 1e-10, 0.9999)) -
+               log(clamp(Φc₁ - Φ₂_21, 1e-10, 0.9999))
+    elseif isnan(z₂)
+        return 2 * logcdf(Normal(), (c₂ - ρ * z₁) / sqrt_omr2) -
+               log(clamp(Φc₂ - Φ₂_12, 1e-10, 0.9999)) -
+               log(clamp(Φc₂ - Φ₂_21, 1e-10, 0.9999))
+    end
+    both_wet_12 = 1 - Φc₁ - Φc₂ + Φ₂_12
+    both_wet_21 = 1 - Φc₂ - Φc₁ + Φ₂_21
+    return 2 * (-log(2π) - half_log_omr2 - (z₁^2 + z₂^2 - 2ρ * z₁ * z₂) * inv_2omr2) -
+           log(clamp(both_wet_12, 1e-10, 0.9999)) -
+           log(clamp(both_wet_21, 1e-10, 0.9999))
 end
 
 # Loglikelihood of two standard latent values of correlation `ρ`, each censored below its
@@ -148,7 +209,9 @@ are clamped to `[-6, 6]`, so that a dry probability of 0 or 1 leaves the likelih
 """
 function fit_covariance(X, threshold, distances, θ0; lower, upper, maxiters)
     c = clamp.(threshold, -6, 6)
-    loss(θ, _) = -pairwise_loglikelihood(GneitingMatern(1.0, θ...), X, c, distances)
+    Φc = cdf.(Normal(), c)
+    pairs_u0, pairs_u = _near_pairs(distances, 2maximum(distances) / 3)
+    loss(θ, _) = -_pairwise_loglikelihood_precomputed(GneitingMatern(1.0, θ...), X, c, Φc, pairs_u0, pairs_u)
     problem = OptimizationProblem(OptimizationFunction(loss, AutoForwardDiff()), θ0; lb=lower, ub=upper)
     sol = solve(problem, LBFGS(); maxiters)
     return GneitingMatern(1.0, sol.u...)

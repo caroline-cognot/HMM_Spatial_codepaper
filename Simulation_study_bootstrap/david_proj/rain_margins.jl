@@ -6,6 +6,7 @@
 # through a logistic, `κ` and `σ` through `exp`.
 
 using Distributions, LogExpFunctions
+using LinearAlgebra: mul!
 using SmoothPeriodicStatsModels
 using Optimization, SimpleNonlinearSolve   # load `fit_loss_optim` of SmoothPeriodicStatsModels
 using OptimizationOptimJL: NelderMead
@@ -100,14 +101,24 @@ Coefficients `[κ; σ; ξ]` of the periodic `EGPD` fitted to the excesses `y` se
 Minimizes the negative loglikelihood plus `Σₜ wₜ (κ(t) - 1)² / penalty`, `wₜ` the share of the
 excesses on day `t`, by Nelder-Mead from `θ0`.
 """
-function fit_egpd(y, t, θ0, T; maxiters, penalty=0.1)
-    family = egpd_family(T, (length(θ0) ÷ 3 - 1) ÷ 2)
-    design = PeriodicDesign(family.spec, 1:T)
+function _κ_penalty(ηκ, Xκ, κc, w, penalty)
+    mul!(ηκ, Xκ, κc)
+    s = zero(eltype(ηκ))
+    @inbounds for t in eachindex(ηκ, w)
+        s += w[t] * (exp(ηκ[t]) - 1)^2
+    end
+    return s / penalty
+end
+
+function fit_egpd(y, t, θ0, T; maxiters, penalty=0.1,
+    family=egpd_family(T, (length(θ0) ÷ 3 - 1) ÷ 2),
+    design=PeriodicDesign(family.spec, 1:T))
     groups = group_by_time(t, T)
     nll = PeriodicNLL(family, design, y, groups)
     w = length.(groups) ./ max(length(y), 1)
     Xκ = design.designs[blockindex(family.spec, :κ)]
-    loss(θ, _) = nll(θ) + sum(w .* (exp.(Xκ * coefs(family.spec, θ, :κ)) .- 1) .^ 2) / penalty
+    ηκ = Vector{float(eltype(θ0))}(undef, size(Xκ, 1))
+    loss(θ, _) = nll(θ) + _κ_penalty(ηκ, Xκ, coefs(family.spec, θ, :κ), w, penalty)
     # the carrier's normalization, `beta_inc` in κ, has no derivative: hence Nelder-Mead
     sol = fit_loss_optim(loss, y, θ0; solver=NelderMead(), adtype=NoAD(), solve_kwargs=(; maxiters))
     return sol.u
@@ -123,15 +134,20 @@ number of states and the degree.
 """
 function fit_rain_margins(R, z, n2t, θ0; T, a, b, maxiters)
     K, D, n = size(θ0.κ)
+    degree = n ÷ 2
+    family = egpd_family(T, degree)
+    design = PeriodicDesign(family.spec, 1:T)
+    state_idx = [findall(==(k), z) for k in 1:K]
     θ = (p=zeros(K, D, n), κ=zeros(K, D, n), σ=zeros(K, D, n), ξ=zeros(K, D, n))
     Threads.@threads for I in CartesianIndices((K, D))
         k, s = Tuple(I)
-        wet = findall(i -> z[i] == k && R[s, i] ≥ a, eachindex(z))
+        wet = filter(i -> R[s, i] ≥ a, state_idx[k])
         r, t = R[s, wet], n2t[wet]
-        θ.p[k, s, :] = fit_small_rain_probability(r, t, T, n ÷ 2; b)
+        θ.p[k, s, :] = fit_small_rain_probability(r, t, T, degree; b)
         above = r .> b
-        u = fit_egpd(r[above] .- b, t[above], [θ0.κ[k, s, :]; θ0.σ[k, s, :]; θ0.ξ[k, s, :]], T; maxiters)
-        θ.κ[k, s, :], θ.σ[k, s, :], θ.ξ[k, s, :] = u[1:n], u[n+1:2n], u[2n+1:3n]
+        u = fit_egpd(r[above] .- b, t[above], [θ0.κ[k, s, :]; θ0.σ[k, s, :]; θ0.ξ[k, s, :]], T;
+            maxiters, family, design)
+        θ.κ[k, s, :], θ.σ[k, s, :], θ.ξ[k, s, :] = @views u[1:n], u[n+1:2n], u[2n+1:3n]
     end
     return θ
 end
